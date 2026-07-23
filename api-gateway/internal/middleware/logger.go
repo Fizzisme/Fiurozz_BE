@@ -22,16 +22,18 @@ func Logger() gin.HandlerFunc {
 		// May be nil if no upstream middleware has set a request ID yet.
 		requestID, _ := c.Get(constants.ContextRequestID)
 
+		
+
+		c.Next()
+
 		userID := ""
 
 		if value, ok := c.Get(constants.ContextClaims); ok {
 
 			if claims, ok := value.(*auth.Claims); ok {
-				userID = claims.UserID
+				userID = claims.Subject
 			}
 		}
-
-		c.Next()
 
 		// Let the request run through the rest of the chain first,
 		// so status code and duration reflect the final outcome.

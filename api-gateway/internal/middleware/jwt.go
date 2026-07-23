@@ -49,7 +49,7 @@ func JWTAuth(jwtService *auth.JWTService) gin.HandlerFunc {
 
 		// Re-inject identity headers derived from the verified token,
 		// so downstream proxied services can trust them.
-		c.Request.Header.Set(constants.HeaderUserID, claims.UserID)
+		c.Request.Header.Set(constants.HeaderUserID, claims.Subject)
 		c.Request.Header.Set(constants.HeaderUserEmail, claims.Email)
 		c.Request.Header.Set(constants.HeaderUserRoles, strings.Join(claims.Roles, ","))
 

@@ -1,8 +1,11 @@
 package helper
 
 import (
-	"github.com/gin-gonic/gin"
+	"fmt"
+
+	"github.com/fizzisme/api-gateway/internal/auth"
 	"github.com/fizzisme/api-gateway/internal/constants"
+	"github.com/gin-gonic/gin"
 )
 
 // BuildRateLimitKey returns the key used to bucket rate-limit state
@@ -12,9 +15,15 @@ import (
 func BuildRateLimitKey(
 	c *gin.Context,
 ) string {
-	userID := c.Request.Header.Get(constants.HeaderUserID)
-	if userID != "" {
-		return "userid:" + userID
-	}
+
+	if value, ok := c.Get(constants.ContextClaims); ok {
+
+        if claims, ok := value.(*auth.Claims); ok {
+			fmt.Println("user: ", claims.Subject)
+
+            return "user:" + claims.Subject
+        }
+    }
+
 	return "ip:" + c.ClientIP()
 }

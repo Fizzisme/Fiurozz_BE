@@ -21,6 +21,12 @@ func buildHandlers(
 
 	handlers := make([]gin.HandlerFunc, 0)
 
+
+	handlers = append(
+    		handlers,
+    		middleware.JWTAuth(jwtService),
+    )
+
 	if route.RateLimit != nil {
 		cfg := route.RateLimit
 
@@ -36,14 +42,6 @@ func buildHandlers(
 			),
 		)
 	}
-
-	
-	handlers = append(
-		handlers,
-		middleware.JWTAuth(jwtService),
-	)		
-
-
 
 	// Final handler: forward the request to the backend service.
 	handlers = append(
