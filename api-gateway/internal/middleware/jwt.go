@@ -6,7 +6,6 @@ import (
 	"github.com/fizzisme/api-gateway/internal/auth"
 	"strings"
 	"github.com/fizzisme/api-gateway/internal/constants"
-	"fmt"
 )
 
 // JWTAuth returns a middleware that authenticates requests via a
@@ -21,7 +20,7 @@ func JWTAuth(jwtService *auth.JWTService) gin.HandlerFunc {
 
 		if authHeader == "" {
 			c.Next()
-			return	
+			return
 		}
 
 		if !strings.HasPrefix(authHeader, "Bearer ") {
@@ -30,8 +29,6 @@ func JWTAuth(jwtService *auth.JWTService) gin.HandlerFunc {
 		}
 
 		token := strings.TrimPrefix(authHeader, "Bearer ")
-
-		fmt.Println("Token received:", token)
 
 		claims, err := jwtService.Verify(token)
 
