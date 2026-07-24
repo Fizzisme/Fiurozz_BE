@@ -8,6 +8,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -22,6 +23,12 @@ public class ProjectSubCategoryJpaEntity {
 
     private String slug;
     private String title;
+
+    @Column(name = "is_active")
+    private boolean active;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
@@ -48,5 +55,13 @@ public class ProjectSubCategoryJpaEntity {
 
     public ProjectCategoryJpaEntity getCategory() {
         return category;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
     }
 }

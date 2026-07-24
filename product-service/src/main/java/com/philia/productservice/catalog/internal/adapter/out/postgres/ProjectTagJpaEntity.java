@@ -19,6 +19,8 @@ public class ProjectTagJpaEntity {
     @Column(name = "display_name")
     private String displayName;
 
+    private String status;
+
     protected ProjectTagJpaEntity() {
     }
 
@@ -32,5 +34,9 @@ public class ProjectTagJpaEntity {
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    public String getStatus() {
+        return status;
     }
 }

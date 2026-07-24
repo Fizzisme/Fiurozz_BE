@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -20,6 +21,12 @@ public class ProjectCategoryJpaEntity {
     private String slug;
     private String title;
     private String icon;
+
+    @Column(name = "is_active")
+    private boolean active;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
 
     protected ProjectCategoryJpaEntity() {
     }
@@ -42,5 +49,13 @@ public class ProjectCategoryJpaEntity {
 
     public String getIcon() {
         return icon;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
     }
 }
