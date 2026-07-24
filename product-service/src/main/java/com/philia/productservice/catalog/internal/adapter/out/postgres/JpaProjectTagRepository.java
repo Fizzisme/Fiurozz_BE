@@ -24,5 +24,6 @@ public class JpaProjectTagRepository implements ProjectTagRepository {
 
         var project = entityManager.getReference(ProjectJpaEntity.class, projectId);
         tagIds.forEach(tagId -> project.addTag(entityManager.getReference(ProjectTagJpaEntity.class, tagId)));
+        entityManager.flush();
     }
 }

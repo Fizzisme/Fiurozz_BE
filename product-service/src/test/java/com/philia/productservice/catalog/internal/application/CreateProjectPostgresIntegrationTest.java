@@ -5,6 +5,7 @@ import com.philia.productservice.catalog.api.CreateProjectCommand;
 import com.philia.productservice.catalog.api.CreateProjectUseCase;
 import com.philia.productservice.shared.security.GatewayHeaderAuthenticationFilter;
 import com.philia.productservice.shared.security.GatewayActorPrincipal;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,9 @@ class CreateProjectPostgresIntegrationTest {
     private JdbcClient jdbcClient;
 
     @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
     private WebApplicationContext applicationContext;
 
     @Autowired
@@ -77,7 +81,7 @@ class CreateProjectPostgresIntegrationTest {
                 List.of(tagId)
         ));
 
-        var projectCount = jdbcClient.sql("""
+        var projectCount = ((Number) entityManager.createNativeQuery("""
                         SELECT COUNT(*)
                         FROM projects
                         WHERE id = :projectId
@@ -87,20 +91,18 @@ class CreateProjectPostgresIntegrationTest {
                           AND source_visibility = 'HIDDEN'
                           AND tech_stack = '["java", "spring-boot"]'::jsonb
                         """)
-                .param("projectId", result.id())
-                .param("ownerId", ownerId)
-                .query(Long.class)
-                .single();
-        var tagCount = jdbcClient.sql("""
+                .setParameter("projectId", result.id())
+                .setParameter("ownerId", ownerId)
+                .getSingleResult()).longValue();
+        var tagCount = ((Number) entityManager.createNativeQuery("""
                         SELECT COUNT(*)
                         FROM project_tags
                         WHERE project_id = :projectId
                           AND tag_id = :tagId
                         """)
-                .param("projectId", result.id())
-                .param("tagId", tagId)
-                .query(Long.class)
-                .single();
+                .setParameter("projectId", result.id())
+                .setParameter("tagId", tagId)
+                .getSingleResult()).longValue();
 
         assertThat(projectCount).isEqualTo(1);
         assertThat(tagCount).isEqualTo(1);
