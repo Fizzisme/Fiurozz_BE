@@ -1,7 +1,8 @@
 package com.philia.productservice.catalog.internal.adapter.in.web.documentation;
 
 import com.philia.productservice.catalog.internal.adapter.in.web.dto.request.CreateProjectRequest;
-import com.philia.productservice.catalog.internal.adapter.in.web.dto.response.CreateProjectResponse;
+import com.philia.productservice.catalog.internal.adapter.in.web.dto.response.ProjectDetailResponse;
+import com.philia.productservice.shared.openapi.ApiErrorResponseDocumentation;
 import com.philia.productservice.shared.openapi.OpenApiConfiguration;
 import com.philia.productservice.shared.web.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,9 +15,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-
-import java.time.Instant;
-import java.util.Map;
 
 @Tag(
         name = "Project Catalog",
@@ -60,7 +58,7 @@ public interface CreateProjectApiDocumentation {
                     description = "The request body or one of its fields is invalid.",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class),
+                            schema = @Schema(implementation = ApiErrorResponseDocumentation.class),
                             examples = @ExampleObject(
                                     value = """
                                             {
@@ -80,7 +78,7 @@ public interface CreateProjectApiDocumentation {
                     description = "A valid authenticated actor is required.",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class)
+                            schema = @Schema(implementation = ApiErrorResponseDocumentation.class)
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -88,11 +86,11 @@ public interface CreateProjectApiDocumentation {
                     description = "The slug already exists or a catalog reference is unavailable.",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class)
+                            schema = @Schema(implementation = ApiErrorResponseDocumentation.class)
                     )
             )
     })
-    ResponseEntity<ApiResponse<CreateProjectResponse>> createProject(
+    ResponseEntity<ApiResponse<ProjectDetailResponse>> createProject(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     description = "Project information controlled by the owner.",
@@ -121,14 +119,4 @@ public interface CreateProjectApiDocumentation {
             CreateProjectRequest request
     );
 
-    @Schema(name = "ApiErrorResponse", description = "Standard failed API response envelope.")
-    record ErrorResponse(
-            boolean success,
-            String code,
-            String message,
-            Object data,
-            Map<String, String> errors,
-            Instant timestamp
-    ) {
-    }
 }

@@ -3,8 +3,9 @@ package com.philia.productservice.catalog.internal.adapter.in.web;
 import com.philia.productservice.catalog.api.CreateProjectUseCase;
 import com.philia.productservice.catalog.internal.adapter.in.web.documentation.CreateProjectApiDocumentation;
 import com.philia.productservice.catalog.internal.adapter.in.web.dto.request.CreateProjectRequest;
-import com.philia.productservice.catalog.internal.adapter.in.web.dto.response.CreateProjectResponse;
+import com.philia.productservice.catalog.internal.adapter.in.web.dto.response.ProjectDetailResponse;
 import com.philia.productservice.catalog.internal.adapter.in.web.mapper.CreateProjectWebMapper;
+import com.philia.productservice.catalog.internal.adapter.in.web.mapper.ProjectDetailWebMapper;
 import com.philia.productservice.shared.web.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -20,23 +21,26 @@ public final class ProjectCommandController implements CreateProjectApiDocumenta
 
     private final CreateProjectUseCase createProjectUseCase;
     private final CreateProjectWebMapper createProjectWebMapper;
+    private final ProjectDetailWebMapper projectDetailWebMapper;
 
     public ProjectCommandController(
             CreateProjectUseCase createProjectUseCase,
-            CreateProjectWebMapper createProjectWebMapper
+            CreateProjectWebMapper createProjectWebMapper,
+            ProjectDetailWebMapper projectDetailWebMapper
     ) {
         this.createProjectUseCase = createProjectUseCase;
         this.createProjectWebMapper = createProjectWebMapper;
+        this.projectDetailWebMapper = projectDetailWebMapper;
     }
 
     @PostMapping
     @Override
-    public ResponseEntity<ApiResponse<CreateProjectResponse>> createProject(
+    public ResponseEntity<ApiResponse<ProjectDetailResponse>> createProject(
             @Valid @RequestBody CreateProjectRequest request
     ) {
         var command = createProjectWebMapper.toCommand(request);
         var result = createProjectUseCase.create(command);
-        var response = createProjectWebMapper.toResponse(result);
+        var response = projectDetailWebMapper.toResponse(result);
         var location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{projectId}")
                 .buildAndExpand(response.id())

@@ -1,8 +1,8 @@
 package com.philia.productservice.catalog.internal.application;
 
 import com.philia.productservice.catalog.api.CreateProjectCommand;
-import com.philia.productservice.catalog.api.CreateProjectResult;
 import com.philia.productservice.catalog.api.CreateProjectUseCase;
+import com.philia.productservice.catalog.api.ProjectDetailResult;
 import com.philia.productservice.catalog.internal.application.exception.ProjectSlugAlreadyExistsException;
 import com.philia.productservice.catalog.internal.application.exception.SubCategoryUnavailableException;
 import com.philia.productservice.catalog.internal.application.exception.TagsUnavailableException;
@@ -55,7 +55,7 @@ public class CreateProjectHandler implements CreateProjectUseCase {
 
     @Override
     @Transactional
-    public CreateProjectResult create(CreateProjectCommand command) {
+    public ProjectDetailResult create(CreateProjectCommand command) {
         if (command == null) {
             throw new InvalidProjectException("Create project command is required");
         }
@@ -162,27 +162,27 @@ public class CreateProjectHandler implements CreateProjectUseCase {
         return new ArrayList<>(unique.values());
     }
 
-    private static CreateProjectResult toResult(
+    private static ProjectDetailResult toResult(
             Project project,
             CatalogReferenceQuery.SubCategoryReference subCategory,
             List<CatalogReferenceQuery.TagReference> tags
     ) {
         var category = subCategory.category();
-        return new CreateProjectResult(
+        return new ProjectDetailResult(
                 project.id(),
-                new CreateProjectResult.Owner(
+                new ProjectDetailResult.Owner(
                         project.ownerId(),
                         project.ownerDisplayName(),
                         project.ownerAvatarUrl()
                 ),
-                new CreateProjectResult.Category(
+                new ProjectDetailResult.Category(
                         category.id(),
                         category.key(),
                         category.slug(),
                         category.title(),
                         category.icon()
                 ),
-                new CreateProjectResult.SubCategory(
+                new ProjectDetailResult.SubCategory(
                         subCategory.id(),
                         subCategory.key(),
                         subCategory.slug(),
@@ -197,12 +197,12 @@ public class CreateProjectHandler implements CreateProjectUseCase {
                 project.techStack(),
                 project.features(),
                 tags.stream()
-                        .map(tag -> new CreateProjectResult.Tag(tag.id(), tag.slug(), tag.displayName()))
+                        .map(tag -> new ProjectDetailResult.Tag(tag.id(), tag.slug(), tag.displayName()))
                         .toList(),
                 project.status().name(),
                 project.visibility().name(),
                 project.sourceVisibility().name(),
-                new CreateProjectResult.Statistics(
+                new ProjectDetailResult.Statistics(
                         project.viewCount(),
                         project.likeCount(),
                         project.commentCount()
