@@ -3,9 +3,7 @@ package com.philia.productservice.catalog.internal.adapter.out.postgres;
 import com.philia.productservice.catalog.api.ProjectDetailResult;
 import com.philia.productservice.catalog.internal.application.port.out.ProjectDetailQuery;
 import org.springframework.stereotype.Repository;
-import tools.jackson.databind.ObjectMapper;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -18,11 +16,9 @@ import java.util.UUID;
 public class JpaProjectDetailQuery implements ProjectDetailQuery {
 
     private final JpaProjectDetailRepository projectRepository;
-    private final ObjectMapper objectMapper;
 
-    public JpaProjectDetailQuery(JpaProjectDetailRepository projectRepository, ObjectMapper objectMapper) {
+    public JpaProjectDetailQuery(JpaProjectDetailRepository projectRepository) {
         this.projectRepository = projectRepository;
-        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -56,8 +52,8 @@ public class JpaProjectDetailQuery implements ProjectDetailQuery {
                 project.getDescription(),
                 project.getThumbnailUrl(),
                 project.getDemoUrl(),
-                readStringList(project.getTechStackJson()),
-                readStringList(project.getFeaturesJson()),
+                project.getTechStack(),
+                project.getFeatures(),
                 tags,
                 project.getStatus(),
                 project.getVisibility(),
@@ -71,7 +67,4 @@ public class JpaProjectDetailQuery implements ProjectDetailQuery {
         );
     }
 
-    private List<String> readStringList(String json) {
-        return List.copyOf(Arrays.asList(objectMapper.readValue(json, String[].class)));
-    }
 }
