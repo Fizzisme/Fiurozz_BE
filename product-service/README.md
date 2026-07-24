@@ -6,6 +6,10 @@
 - [Clean Architecture for Product Service](docs/architecture/02-clean-architecture.md)
 - [Product Service architecture blueprint](docs/architecture/03-product-service-architecture-blueprint.md)
 
+## API design
+
+- [Phase 1 Catalog Management API](docs/catalog-management-api/README.md)
+
 ## PostgreSQL development database
 
 Start PostgreSQL 18 with a persistent Docker volume:
