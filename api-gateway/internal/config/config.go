@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"github.com/joho/godotenv"
+	"gopkg.in/yaml.v3"
 )
 
 // Config holds all runtime configuration for the API Gateway,
@@ -20,15 +21,7 @@ type Config struct {
 
 	AccessTokenExpire string
 
-	AuthService string
-
-	ProjectService string
-
-	MemberService string
-
-	ChatService string
-
-	NotificationService string
+	RoutesConfig []RouteConfig
 }
 
 // Load reads environment variables (via a .env file) into a Config.
@@ -53,17 +46,26 @@ func Load() (*Config, error) {
 		JWTIssuer: os.Getenv("JWT_ISSUER"),
 
 		AccessTokenExpire: os.Getenv("ACCESS_TOKEN_EXPIRE"),
-
-		AuthService: os.Getenv("AUTH_SERVICE"),
-
-		ProjectService: os.Getenv("PROJECT_SERVICE"),
-
-		MemberService: os.Getenv("MEMBER_SERVICE"),
-
-		ChatService: os.Getenv("CHAT_SERVICE"),
-
-		NotificationService: os.Getenv("NOTIFICATION_SERVICE"),
 	}
+
+	routesData, err := os.ReadFile("configs/routes.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	var wrapper struct {
+		Routes []RouteConfig `yaml:"routes"`
+	}
+
+	if err := yaml.Unmarshal(routesData, &wrapper); err != nil {
+		return nil, err
+	}
+
+	for i := range wrapper.Routes {
+		wrapper.Routes[i].Upstream = os.ExpandEnv(wrapper.Routes[i].Upstream)
+	}
+
+	cfg.RoutesConfig = wrapper.Routes
 	
 	return cfg, nil
 }

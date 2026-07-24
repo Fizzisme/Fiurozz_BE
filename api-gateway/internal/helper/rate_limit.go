@@ -1,8 +1,6 @@
 package helper
 
 import (
-	"fmt"
-
 	"github.com/fizzisme/api-gateway/internal/auth"
 	"github.com/fizzisme/api-gateway/internal/constants"
 	"github.com/gin-gonic/gin"
@@ -17,10 +15,7 @@ func BuildRateLimitKey(
 ) string {
 
 	if value, ok := c.Get(constants.ContextClaims); ok {
-
         if claims, ok := value.(*auth.Claims); ok {
-			fmt.Println("user: ", claims.Subject)
-
             return "user:" + claims.Subject
         }
     }
