@@ -9,6 +9,8 @@ import (
 	"github.com/fizzisme/api-gateway/internal/ratelimit"
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.uber.org/zap"
+	"github.com/fizzisme/api-gateway/internal/logger"
 )
 
 // SetupRouter builds the Gin engine for the gateway: global
@@ -19,7 +21,15 @@ func SetupRouter(
 	registry *proxy.Registry,
 	jwtService *auth.JWTService,
 	manager *ratelimit.Manager) *gin.Engine {
+
 	r := gin.New()
+
+	if err := r.SetTrustedProxies(nil); err != nil {
+        logger.Log.Fatal(
+            "cannot configure trusted proxies",
+            zap.Error(err),
+        )
+    }
 
 	// Global middleware chain, applied to every route, in order:
 	//   1. Recovery    - recovers panics from route handlers

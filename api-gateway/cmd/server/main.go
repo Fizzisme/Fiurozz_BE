@@ -14,9 +14,9 @@ import (
 	"github.com/fizzisme/api-gateway/internal/metrics"
 	"github.com/fizzisme/api-gateway/internal/proxy"
 	"github.com/fizzisme/api-gateway/internal/ratelimit"
-	"github.com/fizzisme/api-gateway/internal/resilience"
 	"github.com/fizzisme/api-gateway/internal/router"
 	"github.com/fizzisme/api-gateway/internal/tracing"
+	"github.com/fizzisme/api-gateway/internal/bootstrap"
 	"go.uber.org/zap"
 )
 
@@ -76,61 +76,23 @@ func main() {
 
 	logger.Log.Info(
 		"Application starting",
-		zap.String("app", cfg.AppName), 
+		zap.String("app", cfg.AppName),
 		zap.String("port", cfg.Port),
 	)
-
-
-	// Circuit breaker for the Auth Service backend. Trips after
-	// repeated failures to stop sending requests to a backend that's
-	// already down, giving it time to recover instead of piling on load.
-	authBreaker := resilience.NewBreaker("auth")
-
-	// Retry policy applied to Auth Service calls that fail transiently
-	// (e.g. timeouts, connection errors): up to 3 attempts total, with
-	// delay increasing from 1s up to a cap of 3s between retries
-	// (presumably exponential/backoff, capped by MaxDelay).
-	authRetryConfig := &resilience.RetryConfig{
-		MaxAttempts: 3,               
-		BaseDelay:   1 * time.Second, 
-		MaxDelay:    3 * time.Second,
-	}
-
-	// Create a reverse proxy targeting the Auth Service. Requests under
-	// "/auth" are forwarded to cfg.AuthService; each request is bounded
-	// by a 5s timeout, and outbound calls go through the auth circuit
-	// breaker + retry policy configured above. "auth" labels this
-	// service in the breaker/retry logs and metrics.
-	authProxy, err := proxy.New(cfg.AuthService, "/auth", 5 * time.Second, authBreaker, authRetryConfig, "auth")
-
-	if err != nil {
-		logger.Log.Fatal(
-			"cannot create auth proxy",
-			zap.Error(err),
-		)
-	}
 
 	// Registry holds the mapping between route prefixes and their
 	// backing services/proxies.
 	registry := proxy.NewRegistry()
 
-	// Register the Auth Service route.
-	err = registry.Register(proxy.Route{
-		Name: "Auth Service",
-		Prefix: "/auth",
-		Proxy: authProxy,
-
-		RateLimit: &ratelimit.RateLimitConfig{
-			Requests: 10,
-			Window: 1 * time.Minute,
-			Burst: 5,
-		},
-	
-	})
+	// Register the routes.
+	err = bootstrap.RegisterRoutes(
+		cfg,
+		registry,
+	)
 
 	if err != nil {
 		logger.Log.Fatal(
-			"cannot register auth service",
+			"cannot register routes",
 			zap.Error(err),
 		)
 	}

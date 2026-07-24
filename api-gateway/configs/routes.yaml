@@ -1,0 +1,20 @@
+routes:
+
+  - name: auth
+    prefix: /api/auth
+    upstream: ${AUTH_SERVICE}
+
+    timeout: 5s
+
+    retry:
+      attempts: 3
+      base_delay: 1s
+      max_delay: 3s
+
+    breaker:
+      enabled: true
+
+    rate_limit:
+      requests: 10
+      window: 1m
+      burst: 5
