@@ -1,0 +1,26 @@
+name: fiurozz
+
+services:
+  product-db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: ${DB_NAME:-product_service}
+      POSTGRES_USER: ${DB_USERNAME:-product_service}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-product_service}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - product-db-data:/var/lib/postgresql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${DB_USERNAME:-product_service} -d ${DB_NAME:-product_service}
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  product-db-data:

@@ -1,0 +1,25 @@
+name: fiurozz
+
+services:
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    restart: unless-stopped
+    ports:
+      - "${ZIPKIN_PORT:-9411}:9411"
+
+volumes:
+  redis-data:
+    name: fiurozz-redis-data
