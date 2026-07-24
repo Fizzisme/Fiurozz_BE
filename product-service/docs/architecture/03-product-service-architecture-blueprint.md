@@ -249,7 +249,7 @@ abstractions.
 catalog/api/
   CreateProject.java              input port
   CreateProjectCommand.java       application input
-  CreateProjectResult.java        application output
+  ProjectDetailResult.java        shared create/get application output
   ProjectId.java                  stable ID used across module boundaries
 
 catalog/internal/domain/
@@ -284,7 +284,7 @@ HTTP request
   -> save aggregate
   -> append ProjectCreated integration event if another context needs it
   -> commit
-  -> map CreateProjectResult to HTTP 201
+  -> map ProjectDetailResult to HTTP 201
 ```
 
 The unique PostgreSQL constraint remains the race-condition backstop. An

@@ -1,10 +1,10 @@
-# Product Service
+# Project Service
 
 ## Architecture guides
 
-- [Domain-Driven Design for Product Service](docs/architecture/01-domain-driven-design.md)
-- [Clean Architecture for Product Service](docs/architecture/02-clean-architecture.md)
-- [Product Service architecture blueprint](docs/architecture/03-product-service-architecture-blueprint.md)
+- [Domain-Driven Design for Project Service](docs/architecture/01-domain-driven-design.md)
+- [Clean Architecture for Project Service](docs/architecture/02-clean-architecture.md)
+- [Project Service architecture blueprint](docs/architecture/03-product-service-architecture-blueprint.md)
 
 ## API design
 

@@ -1,6 +1,6 @@
 package com.philia.productservice.catalog.internal.application;
 
-import com.philia.productservice.ProductServiceApplication;
+import com.philia.productservice.ProjectServiceApplication;
 import com.philia.productservice.catalog.api.CreateProjectCommand;
 import com.philia.productservice.catalog.api.CreateProjectUseCase;
 import com.philia.productservice.shared.security.GatewayHeaderAuthenticationFilter;
@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
-        classes = ProductServiceApplication.class,
+        classes = ProjectServiceApplication.class,
         properties = "spring.docker.compose.enabled=false"
 )
 @Transactional
@@ -178,8 +178,8 @@ class CreateProjectPostgresIntegrationTest {
     void publishesCreateProjectOpenApiDocumentation() throws Exception {
         mockMvc().perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.info.title").value("Fiurozz Product Service API"))
-                .andExpect(jsonPath("$.paths.length()").value(1))
+                .andExpect(jsonPath("$.info.title").value("Fiurozz Project Service API"))
+                .andExpect(jsonPath("$.paths.length()").value(2))
                 .andExpect(jsonPath("$['paths']['/api/v1/projects']['post']['operationId']")
                         .value("createProject"))
                 .andExpect(jsonPath("$['paths']['/api/v1/projects']['post']['security'][0]['bearerAuth']")

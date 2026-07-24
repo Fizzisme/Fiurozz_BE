@@ -76,7 +76,7 @@ class CreateProjectHandlerTest {
             FakeProjectRepository projects,
             FakeProjectTagRepository projectTags
     ) {
-        CurrentActor currentActor = () -> new CurrentActor.Actor(OWNER_ID, "Philia", null);
+        CurrentActor currentActor = () -> Optional.of(new CurrentActor.Actor(OWNER_ID, "Philia", null));
         return new CreateProjectHandler(
                 currentActor,
                 projects,
