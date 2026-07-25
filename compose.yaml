@@ -1,0 +1,5 @@
+name: fiurozz
+
+include:
+  - ./infrastructure/compose.yaml
+  - ./product-service/compose.yaml
