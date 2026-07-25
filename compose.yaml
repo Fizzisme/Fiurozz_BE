@@ -2,4 +2,4 @@ name: fiurozz
 
 include:
   - ./infrastructure/compose.yaml
-  - ./product-service/compose.yaml
+  - ./project-service/compose.yaml
