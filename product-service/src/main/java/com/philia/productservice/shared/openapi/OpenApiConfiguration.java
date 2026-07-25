@@ -13,10 +13,10 @@ public class OpenApiConfiguration {
     public static final String BEARER_AUTH = "bearerAuth";
 
     @Bean
-    OpenAPI productServiceOpenApi() {
+    OpenAPI projectServiceOpenApi() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Fiurozz Product Service API")
+                        .title("Fiurozz Project Service API")
                         .description("HTTP API for project catalog management and discovery.")
                         .version("v1"))
                 .components(new Components().addSecuritySchemes(

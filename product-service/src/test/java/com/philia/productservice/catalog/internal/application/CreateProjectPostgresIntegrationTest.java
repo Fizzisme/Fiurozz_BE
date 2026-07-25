@@ -1,10 +1,11 @@
 package com.philia.productservice.catalog.internal.application;
 
-import com.philia.productservice.ProductServiceApplication;
+import com.philia.productservice.ProjectServiceApplication;
 import com.philia.productservice.catalog.api.CreateProjectCommand;
 import com.philia.productservice.catalog.api.CreateProjectUseCase;
 import com.philia.productservice.shared.security.GatewayHeaderAuthenticationFilter;
 import com.philia.productservice.shared.security.GatewayActorPrincipal;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
-        classes = ProductServiceApplication.class,
+        classes = ProjectServiceApplication.class,
         properties = "spring.docker.compose.enabled=false"
 )
 @Transactional
@@ -42,6 +43,9 @@ class CreateProjectPostgresIntegrationTest {
 
     @Autowired
     private JdbcClient jdbcClient;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Autowired
     private WebApplicationContext applicationContext;
@@ -77,7 +81,7 @@ class CreateProjectPostgresIntegrationTest {
                 List.of(tagId)
         ));
 
-        var projectCount = jdbcClient.sql("""
+        var projectCount = ((Number) entityManager.createNativeQuery("""
                         SELECT COUNT(*)
                         FROM projects
                         WHERE id = :projectId
@@ -87,20 +91,18 @@ class CreateProjectPostgresIntegrationTest {
                           AND source_visibility = 'HIDDEN'
                           AND tech_stack = '["java", "spring-boot"]'::jsonb
                         """)
-                .param("projectId", result.id())
-                .param("ownerId", ownerId)
-                .query(Long.class)
-                .single();
-        var tagCount = jdbcClient.sql("""
+                .setParameter("projectId", result.id())
+                .setParameter("ownerId", ownerId)
+                .getSingleResult()).longValue();
+        var tagCount = ((Number) entityManager.createNativeQuery("""
                         SELECT COUNT(*)
                         FROM project_tags
                         WHERE project_id = :projectId
                           AND tag_id = :tagId
                         """)
-                .param("projectId", result.id())
-                .param("tagId", tagId)
-                .query(Long.class)
-                .single();
+                .setParameter("projectId", result.id())
+                .setParameter("tagId", tagId)
+                .getSingleResult()).longValue();
 
         assertThat(projectCount).isEqualTo(1);
         assertThat(tagCount).isEqualTo(1);
@@ -178,8 +180,8 @@ class CreateProjectPostgresIntegrationTest {
     void publishesCreateProjectOpenApiDocumentation() throws Exception {
         mockMvc().perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.info.title").value("Fiurozz Product Service API"))
-                .andExpect(jsonPath("$.paths.length()").value(1))
+                .andExpect(jsonPath("$.info.title").value("Fiurozz Project Service API"))
+                .andExpect(jsonPath("$.paths.length()").value(2))
                 .andExpect(jsonPath("$['paths']['/api/v1/projects']['post']['operationId']")
                         .value("createProject"))
                 .andExpect(jsonPath("$['paths']['/api/v1/projects']['post']['security'][0]['bearerAuth']")

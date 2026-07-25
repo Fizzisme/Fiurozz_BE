@@ -16,9 +16,10 @@ Phase 1 uses only the `catalog` module. GitHub integration, source snapshots,
 object-storage uploads, versions, likes, comments, and share analytics are not
 part of this contract.
 
-The currently implemented OpenAPI document contains only endpoint 1, Create
-Project. Its Swagger UI is available at `/swagger-ui.html`, and the generated
-OpenAPI JSON is available at `/v3/api-docs`.
+The currently implemented OpenAPI document contains endpoints 1 and 2: Create
+Project and Get Project by ID. Its Swagger UI is available at
+`/swagger-ui.html`, and the generated OpenAPI JSON is available at
+`/v3/api-docs`.
 
 ## Endpoint summary
 
@@ -363,7 +364,7 @@ Location: /api/v1/projects/ff82810c-bb24-46cf-b25f-48cb96532cda
 ETag: "0"
 ```
 
-Response: `ApiResponse<CreateProjectResponse>`. `data` has the same fields as
+Response: `ApiResponse<ProjectDetailResponse>`. `data` has the same fields as
 `ProjectDetailResponse`; when `tagIds` are supplied, the resolved Tags must be
 present in `data.tags`.
 
@@ -387,7 +388,7 @@ Access rules:
 | `ARCHIVED` | Allowed | Hidden |
 | Soft deleted | Hidden | Hidden |
 
-Success: `200 OK`, `ETag`, and `ProjectDetailResponse`.
+Success: `200 OK`, `ETag`, and `ApiResponse<ProjectDetailResponse>`.
 
 Errors: `400`, `404`.
 

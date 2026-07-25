@@ -142,7 +142,7 @@ It should not reimplement rules that belong in the aggregate.
 
 ```java
 public interface CreateProjectUseCase {
-    CreateProjectResult handle(CreateProjectCommand command);
+    ProjectDetailResult handle(CreateProjectCommand command);
 }
 
 public record CreateProjectCommand(
@@ -152,7 +152,7 @@ public record CreateProjectCommand(
     String description
 ) {}
 
-public record CreateProjectResult(UUID projectId, String slug) {}
+public record ProjectDetailResult(UUID projectId, String slug) {}
 ```
 
 An output port expresses exactly what the use case needs:
@@ -294,7 +294,7 @@ POST /projects
   -> ProjectRepository                         output port
   -> JdbcProjectRepositoryAdapter              output adapter
   -> Spring Data JDBC / PostgreSQL             framework and database
-  <- CreateProjectResult
+  <- ProjectDetailResult
   <- HTTP 201 ProjectResponse
 ```
 

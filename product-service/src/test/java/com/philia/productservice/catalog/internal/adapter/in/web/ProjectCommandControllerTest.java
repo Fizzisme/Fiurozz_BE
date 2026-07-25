@@ -1,9 +1,10 @@
 package com.philia.productservice.catalog.internal.adapter.in.web;
 
-import com.philia.productservice.catalog.api.CreateProjectResult;
 import com.philia.productservice.catalog.api.CreateProjectUseCase;
+import com.philia.productservice.catalog.api.ProjectDetailResult;
 import com.philia.productservice.catalog.internal.adapter.in.web.dto.request.CreateProjectRequest;
 import com.philia.productservice.catalog.internal.adapter.in.web.mapper.CreateProjectWebMapper;
+import com.philia.productservice.catalog.internal.adapter.in.web.mapper.ProjectDetailWebMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -29,8 +30,9 @@ class ProjectCommandControllerTest {
     void returnsCreatedApiResponseWithLocationAndEtag() {
         var result = result();
         CreateProjectUseCase useCase = command -> result;
-        CreateProjectWebMapper mapper = Mappers.getMapper(CreateProjectWebMapper.class);
-        var controller = new ProjectCommandController(useCase, mapper);
+        CreateProjectWebMapper createMapper = Mappers.getMapper(CreateProjectWebMapper.class);
+        ProjectDetailWebMapper detailMapper = Mappers.getMapper(ProjectDetailWebMapper.class);
+        var controller = new ProjectCommandController(useCase, createMapper, detailMapper);
         var servletRequest = new MockHttpServletRequest("POST", "/api/v1/projects");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest));
 
@@ -44,7 +46,7 @@ class ProjectCommandControllerTest {
                 result.visibility(),
                 result.techStack(),
                 result.features(),
-                result.tags().stream().map(CreateProjectResult.Tag::id).toList()
+                result.tags().stream().map(ProjectDetailResult.Tag::id).toList()
         ));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -58,13 +60,13 @@ class ProjectCommandControllerTest {
         assertThat(response.getBody().data().id()).isEqualTo(result.id());
     }
 
-    private static CreateProjectResult result() {
+    private static ProjectDetailResult result() {
         var now = Instant.parse("2026-07-24T02:00:00Z");
-        return new CreateProjectResult(
+        return new ProjectDetailResult(
                 UUID.randomUUID(),
-                new CreateProjectResult.Owner(UUID.randomUUID(), "Philia", null),
-                new CreateProjectResult.Category(UUID.randomUUID(), "software", "software", "Software", "code"),
-                new CreateProjectResult.SubCategory(UUID.randomUUID(), "backend", "backend", "Backend"),
+                new ProjectDetailResult.Owner(UUID.randomUUID(), "Philia", null),
+                new ProjectDetailResult.Category(UUID.randomUUID(), "software", "software", "Software", "code"),
+                new ProjectDetailResult.SubCategory(UUID.randomUUID(), "backend", "backend", "Backend"),
                 "Fiurozz Backend",
                 "fiurozz-backend",
                 "Short description",
@@ -73,11 +75,11 @@ class ProjectCommandControllerTest {
                 "https://demo.example.com",
                 List.of("java"),
                 List.of("Project catalog"),
-                List.of(new CreateProjectResult.Tag(UUID.randomUUID(), "backend", "Backend")),
+                List.of(new ProjectDetailResult.Tag(UUID.randomUUID(), "backend", "Backend")),
                 "DRAFT",
                 "PRIVATE",
                 "HIDDEN",
-                new CreateProjectResult.Statistics(0, 0, 0),
+                new ProjectDetailResult.Statistics(0, 0, 0),
                 null,
                 now,
                 now,
