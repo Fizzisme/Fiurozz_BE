@@ -19,6 +19,9 @@ spring:
     jdbc:
       initialize-schema: never
 
+server:
+  port: ${SERVER_PORT:8082}
+
 springdoc:
   api-docs:
     enabled: true
