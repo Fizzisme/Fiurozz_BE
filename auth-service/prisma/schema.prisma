@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  passwordHash String? @map("password_hash")
+  emailVerified Boolean @default(false) @map("email_verified")
+  status String @default("ACTIVE")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  lastLoginAt DateTime? @map("last_login_at")
+
+  oauthAccounts OauthAccount[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model OauthAccount {
+  id String @id @default(uuid())
+  userId String @map("user_id")
+  provider String
+  providerUserId String @map("provider_user_id")
+  providerEmail String @map("provider_email")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("oauth_accounts")
+
+}
+
+model RefreshToken {
+  id String @id @default(uuid())
+  userId String @map("user_id")
+  tokenHash String @map("token_hash")
+  deviceName String? @map("device_name")
+  userAgent String? @map("user_agent")
+  ipAddress String? @map("ip_address")
+  expiresAt DateTime @map("expires_at")
+  revoked Boolean @default(false)
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  lastUsedAt DateTime @default(now()) @map("last_used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
