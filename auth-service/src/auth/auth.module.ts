@@ -1,11 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
+import {JwtModule} from "@nestjs/jwt";
+import {JwtTokenService} from "./jwt/jwt-token.service.js";
+import {PasswordService} from "./password/password.service.js";
+import {RefreshTokenService} from "./token/refresh-token.service.js";
 
 
 @Module({
-    imports: [],
+    imports: [
+        JwtModule.register({})
+    ],
     controllers:[AuthController],
-    providers: [AuthService]
+    providers: [AuthService, JwtTokenService, PasswordService, RefreshTokenService]
 })
 export class AuthModule {}

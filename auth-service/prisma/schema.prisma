@@ -20,6 +20,7 @@ model User {
   passwordHash String? @map("password_hash")
   emailVerified Boolean @default(false) @map("email_verified")
   status String @default("ACTIVE")
+  roles String[] @default(["USER"])
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   lastLoginAt DateTime? @map("last_login_at")
