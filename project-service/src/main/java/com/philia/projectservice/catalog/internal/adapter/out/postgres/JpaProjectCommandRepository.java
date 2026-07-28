@@ -33,4 +33,23 @@ interface JpaProjectCommandRepository extends JpaRepository<ProjectJpaEntity, UU
             @Param("expectedVersion") long expectedVersion,
             @Param("updatedAt") Instant updatedAt
     );
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            UPDATE ProjectJpaEntity project
+            SET project.deletedAt = :deletedAt,
+                project.updatedAt = :deletedAt,
+                project.version = project.version + 1
+            WHERE project.id = :projectId
+              AND project.ownerId = :ownerId
+              AND project.version = :expectedVersion
+              AND project.deletedAt IS NULL
+              AND project.status IN ('DRAFT', 'ARCHIVED')
+            """)
+    int softDeleteIfCurrent(
+            @Param("projectId") UUID projectId,
+            @Param("ownerId") UUID ownerId,
+            @Param("expectedVersion") long expectedVersion,
+            @Param("deletedAt") Instant deletedAt
+    );
 }

@@ -1,6 +1,7 @@
 package com.philia.projectservice.catalog.internal.adapter.in.web;
 
 import com.philia.projectservice.catalog.api.CreateProjectUseCase;
+import com.philia.projectservice.catalog.api.DeleteProjectUseCase;
 import com.philia.projectservice.catalog.api.ProjectDetailResult;
 import com.philia.projectservice.catalog.api.ReplaceProjectTagsResult;
 import com.philia.projectservice.catalog.api.ReplaceProjectTagsUseCase;
@@ -42,8 +43,10 @@ class ProjectCommandControllerTest {
         ProjectTagsWebMapper tagsMapper = Mappers.getMapper(ProjectTagsWebMapper.class);
         UpdateProjectUseCase updateProjectUseCase = command -> result;
         UpdateProjectWebMapper updateMapper = Mappers.getMapper(UpdateProjectWebMapper.class);
+        DeleteProjectUseCase deleteProjectUseCase = command -> { };
         var controller = new ProjectCommandController(
-                useCase, createMapper, detailMapper, replaceTagsUseCase, tagsMapper, updateProjectUseCase, updateMapper);
+                useCase, createMapper, detailMapper, replaceTagsUseCase, tagsMapper, updateProjectUseCase, updateMapper,
+                deleteProjectUseCase);
         var servletRequest = new MockHttpServletRequest("POST", "/v1/projects");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest));
 

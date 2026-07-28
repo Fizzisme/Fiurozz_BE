@@ -28,6 +28,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/v1/projects").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/v1/projects/*").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/v1/projects/*").authenticated()
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(gatewayHeaderAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

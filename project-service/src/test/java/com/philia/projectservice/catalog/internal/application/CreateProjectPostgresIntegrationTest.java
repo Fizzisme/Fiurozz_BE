@@ -26,6 +26,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -259,6 +260,42 @@ class CreateProjectPostgresIntegrationTest {
     }
 
     @Test
+    void softDeletesDraftProjectThroughHttpApi() throws Exception {
+        var ownerId = UUID.randomUUID();
+        var categoryId = UUID.randomUUID();
+        var subCategoryId = UUID.randomUUID();
+        var tagId = UUID.randomUUID();
+        var suffix = UUID.randomUUID().toString();
+        insertReferences(categoryId, subCategoryId, tagId, suffix);
+        authenticate(ownerId);
+
+        var created = createProjectUseCase.create(new CreateProjectCommand(
+                subCategoryId, "Fiurozz Backend", "Fiurozz Backend " + suffix,
+                "A project catalog backend", "The complete project description", "https://demo.example.com",
+                "PRIVATE", List.of("Java"), List.of("Project Catalog"), List.of(tagId)
+        ));
+
+        mockMvc().perform(delete("/v1/projects/{projectId}", created.id())
+                        .header("Authorization", "Bearer test-token")
+                        .header(GatewayHeaderAuthenticationFilter.USER_ID_HEADER, ownerId)
+                        .header(GatewayHeaderAuthenticationFilter.USER_EMAIL_HEADER, "owner@example.com")
+                        .header(GatewayHeaderAuthenticationFilter.USER_DISPLAY_NAME_HEADER, "Project Owner")
+                        .header("If-Match", "\"0\""))
+                .andExpect(status().isNoContent());
+
+        var deleted = jdbcClient.sql("SELECT deleted_at IS NOT NULL FROM projects WHERE id = :projectId")
+                .param("projectId", created.id())
+                .query(Boolean.class)
+                .single();
+        var version = jdbcClient.sql("SELECT row_version FROM projects WHERE id = :projectId")
+                .param("projectId", created.id())
+                .query(Long.class)
+                .single();
+        assertThat(deleted).isTrue();
+        assertThat(version).isEqualTo(1L);
+    }
+
+    @Test
     void wrapsMissingAuthenticationInApiResponse() throws Exception {
         SecurityContextHolder.clearContext();
 
@@ -285,6 +322,8 @@ class CreateProjectPostgresIntegrationTest {
                         .value("replaceProjectTags"))
                 .andExpect(jsonPath("$['paths']['/v1/projects/{projectId}']['patch']['operationId']")
                         .value("updateProject"))
+                .andExpect(jsonPath("$['paths']['/v1/projects/{projectId}']['delete']['operationId']")
+                        .value("deleteProject"))
                 .andExpect(jsonPath("$['paths']['/v1/projects']['post']['responses']['201']")
                         .exists())
                 .andExpect(jsonPath("$['components']['securitySchemes']['bearerAuth']['scheme']")

@@ -1,9 +1,12 @@
 package com.philia.projectservice.catalog.internal.adapter.in.web;
 
 import com.philia.projectservice.catalog.api.CreateProjectUseCase;
+import com.philia.projectservice.catalog.api.DeleteProjectCommand;
+import com.philia.projectservice.catalog.api.DeleteProjectUseCase;
 import com.philia.projectservice.catalog.api.ReplaceProjectTagsUseCase;
 import com.philia.projectservice.catalog.api.UpdateProjectUseCase;
 import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.CreateProjectApiDocumentation;
+import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.DeleteProjectApiDocumentation;
 import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.ReplaceProjectTagsApiDocumentation;
 import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.UpdateProjectApiDocumentation;
 import com.philia.projectservice.catalog.internal.adapter.in.web.dto.request.CreateProjectRequest;
@@ -20,6 +23,7 @@ import com.philia.projectservice.shared.web.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -34,7 +38,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/v1/projects")
 public final class ProjectCommandController implements CreateProjectApiDocumentation, ReplaceProjectTagsApiDocumentation,
-        UpdateProjectApiDocumentation {
+        UpdateProjectApiDocumentation, DeleteProjectApiDocumentation {
 
     private final CreateProjectUseCase createProjectUseCase;
     private final CreateProjectWebMapper createProjectWebMapper;
@@ -43,6 +47,7 @@ public final class ProjectCommandController implements CreateProjectApiDocumenta
     private final ProjectTagsWebMapper projectTagsWebMapper;
     private final UpdateProjectUseCase updateProjectUseCase;
     private final UpdateProjectWebMapper updateProjectWebMapper;
+    private final DeleteProjectUseCase deleteProjectUseCase;
 
     public ProjectCommandController(
             CreateProjectUseCase createProjectUseCase,
@@ -51,7 +56,8 @@ public final class ProjectCommandController implements CreateProjectApiDocumenta
             ReplaceProjectTagsUseCase replaceProjectTagsUseCase,
             ProjectTagsWebMapper projectTagsWebMapper,
             UpdateProjectUseCase updateProjectUseCase,
-            UpdateProjectWebMapper updateProjectWebMapper
+            UpdateProjectWebMapper updateProjectWebMapper,
+            DeleteProjectUseCase deleteProjectUseCase
     ) {
         this.createProjectUseCase = createProjectUseCase;
         this.createProjectWebMapper = createProjectWebMapper;
@@ -60,6 +66,17 @@ public final class ProjectCommandController implements CreateProjectApiDocumenta
         this.projectTagsWebMapper = projectTagsWebMapper;
         this.updateProjectUseCase = updateProjectUseCase;
         this.updateProjectWebMapper = updateProjectWebMapper;
+        this.deleteProjectUseCase = deleteProjectUseCase;
+    }
+
+    @DeleteMapping("/{projectId}")
+    @Override
+    public ResponseEntity<Void> deleteProject(
+            @PathVariable UUID projectId,
+            @RequestHeader("If-Match") String ifMatch
+    ) {
+        deleteProjectUseCase.deleteProject(new DeleteProjectCommand(projectId, parseEtag(ifMatch)));
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{projectId}")
