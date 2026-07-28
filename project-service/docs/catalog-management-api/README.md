@@ -31,7 +31,7 @@ Phase 1 contains 15 endpoints:
 | 2 | `GET` | `/v1/projects/{projectId}` | Optional | `GetProject` |
 | 3 | `PATCH` | `/v1/projects/{projectId}` | Required | `UpdateProject` |
 | 4 | `DELETE` | `/v1/projects/{projectId}` | Required | `DeleteProject` |
-| 5 | `GET` | `/api/v1/me/projects` | Required | `ListMyProjects` |
+| 5 | `GET` | `/v1/me/projects` | Required | `ListMyProjects` |
 | 6 | `PUT` | `/v1/projects/{projectId}/tags` | Required | `ReplaceProjectTags` |
 | 7 | `POST` | `/v1/projects/{projectId}/publish` | Required | `PublishProject` |
 | 8 | `POST` | `/v1/projects/{projectId}/archive` | Required | `ArchiveProject` |
@@ -442,7 +442,7 @@ Errors: `401`, `403`, `404`, `409`, `412`.
 ## 5. List My Projects
 
 ```http
-GET /api/v1/me/projects?status=DRAFT&visibility=PRIVATE&q=backend&page=0&size=20&sort=createdAt,desc
+GET /v1/me/projects?status=DRAFT&visibility=PRIVATE&q=backend&page=0&size=20&sort=createdAt,desc
 Authorization: Bearer <access-token>
 ```
 
