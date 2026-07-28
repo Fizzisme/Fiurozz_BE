@@ -13,6 +13,8 @@ interface JpaProjectCommandRepository extends JpaRepository<ProjectJpaEntity, UU
 
     boolean existsByOwnerIdAndSlugAndDeletedAtIsNull(UUID ownerId, String slug);
 
+    boolean existsByOwnerIdAndSlugAndDeletedAtIsNullAndIdNot(UUID ownerId, String slug, UUID projectId);
+
     Optional<ProjectJpaEntity> findByIdAndDeletedAtIsNull(UUID projectId);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)

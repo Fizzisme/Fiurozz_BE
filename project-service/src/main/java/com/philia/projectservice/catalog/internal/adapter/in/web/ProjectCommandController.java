@@ -2,15 +2,19 @@ package com.philia.projectservice.catalog.internal.adapter.in.web;
 
 import com.philia.projectservice.catalog.api.CreateProjectUseCase;
 import com.philia.projectservice.catalog.api.ReplaceProjectTagsUseCase;
+import com.philia.projectservice.catalog.api.UpdateProjectUseCase;
 import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.CreateProjectApiDocumentation;
 import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.ReplaceProjectTagsApiDocumentation;
+import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.UpdateProjectApiDocumentation;
 import com.philia.projectservice.catalog.internal.adapter.in.web.dto.request.CreateProjectRequest;
 import com.philia.projectservice.catalog.internal.adapter.in.web.dto.request.ReplaceProjectTagsRequest;
+import com.philia.projectservice.catalog.internal.adapter.in.web.dto.request.UpdateProjectRequest;
 import com.philia.projectservice.catalog.internal.adapter.in.web.dto.response.ProjectDetailResponse;
 import com.philia.projectservice.catalog.internal.adapter.in.web.dto.response.ProjectTagsResponse;
 import com.philia.projectservice.catalog.internal.adapter.in.web.mapper.CreateProjectWebMapper;
 import com.philia.projectservice.catalog.internal.adapter.in.web.mapper.ProjectDetailWebMapper;
 import com.philia.projectservice.catalog.internal.adapter.in.web.mapper.ProjectTagsWebMapper;
+import com.philia.projectservice.catalog.internal.adapter.in.web.mapper.UpdateProjectWebMapper;
 import com.philia.projectservice.catalog.internal.domain.exception.InvalidProjectException;
 import com.philia.projectservice.shared.web.ApiResponse;
 import jakarta.validation.Valid;
@@ -18,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,26 +33,53 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/projects")
-public final class ProjectCommandController implements CreateProjectApiDocumentation, ReplaceProjectTagsApiDocumentation {
+public final class ProjectCommandController implements CreateProjectApiDocumentation, ReplaceProjectTagsApiDocumentation,
+        UpdateProjectApiDocumentation {
 
     private final CreateProjectUseCase createProjectUseCase;
     private final CreateProjectWebMapper createProjectWebMapper;
     private final ProjectDetailWebMapper projectDetailWebMapper;
     private final ReplaceProjectTagsUseCase replaceProjectTagsUseCase;
     private final ProjectTagsWebMapper projectTagsWebMapper;
+    private final UpdateProjectUseCase updateProjectUseCase;
+    private final UpdateProjectWebMapper updateProjectWebMapper;
 
     public ProjectCommandController(
             CreateProjectUseCase createProjectUseCase,
             CreateProjectWebMapper createProjectWebMapper,
             ProjectDetailWebMapper projectDetailWebMapper,
             ReplaceProjectTagsUseCase replaceProjectTagsUseCase,
-            ProjectTagsWebMapper projectTagsWebMapper
+            ProjectTagsWebMapper projectTagsWebMapper,
+            UpdateProjectUseCase updateProjectUseCase,
+            UpdateProjectWebMapper updateProjectWebMapper
     ) {
         this.createProjectUseCase = createProjectUseCase;
         this.createProjectWebMapper = createProjectWebMapper;
         this.projectDetailWebMapper = projectDetailWebMapper;
         this.replaceProjectTagsUseCase = replaceProjectTagsUseCase;
         this.projectTagsWebMapper = projectTagsWebMapper;
+        this.updateProjectUseCase = updateProjectUseCase;
+        this.updateProjectWebMapper = updateProjectWebMapper;
+    }
+
+    @PatchMapping("/{projectId}")
+    @Override
+    public ResponseEntity<ApiResponse<ProjectDetailResponse>> updateProject(
+            @PathVariable UUID projectId,
+            @RequestHeader("If-Match") String ifMatch,
+            @Valid @RequestBody UpdateProjectRequest request
+    ) {
+        var command = updateProjectWebMapper.toCommand(projectId, parseEtag(ifMatch), request);
+        var result = updateProjectUseCase.updateProject(command);
+        var response = projectDetailWebMapper.toResponse(result);
+
+        return ResponseEntity.ok()
+                .eTag('"' + Long.toString(response.version()) + '"')
+                .body(ApiResponse.success(
+                        "PROJECT_UPDATED",
+                        "Project updated successfully.",
+                        response
+                ));
     }
 
     @PostMapping

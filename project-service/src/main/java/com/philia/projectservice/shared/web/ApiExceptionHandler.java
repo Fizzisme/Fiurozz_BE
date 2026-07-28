@@ -6,6 +6,7 @@ import com.philia.projectservice.catalog.internal.application.exception.ProjectN
 import com.philia.projectservice.catalog.internal.application.exception.ProjectForbiddenException;
 import com.philia.projectservice.catalog.internal.application.exception.SubCategoryUnavailableException;
 import com.philia.projectservice.catalog.internal.application.exception.ProjectStaleVersionException;
+import com.philia.projectservice.catalog.internal.application.exception.ProjectNotEditableException;
 import com.philia.projectservice.catalog.internal.application.exception.TagsUnavailableException;
 import com.philia.projectservice.catalog.internal.domain.exception.InvalidProjectException;
 import org.springframework.http.HttpStatus;
@@ -68,6 +69,11 @@ public final class ApiExceptionHandler {
     @ExceptionHandler(ProjectStaleVersionException.class)
     public ResponseEntity<ApiResponse<Void>> handleProjectStaleVersion(ProjectStaleVersionException exception) {
         return error(HttpStatus.PRECONDITION_FAILED, "PROJECT_STALE_VERSION", exception.getMessage());
+    }
+
+    @ExceptionHandler(ProjectNotEditableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleProjectNotEditable(ProjectNotEditableException exception) {
+        return error(HttpStatus.CONFLICT, "PROJECT_NOT_EDITABLE", exception.getMessage());
     }
 
     @ExceptionHandler(SubCategoryUnavailableException.class)

@@ -4,10 +4,12 @@ import com.philia.projectservice.catalog.api.CreateProjectUseCase;
 import com.philia.projectservice.catalog.api.ProjectDetailResult;
 import com.philia.projectservice.catalog.api.ReplaceProjectTagsResult;
 import com.philia.projectservice.catalog.api.ReplaceProjectTagsUseCase;
+import com.philia.projectservice.catalog.api.UpdateProjectUseCase;
 import com.philia.projectservice.catalog.internal.adapter.in.web.dto.request.CreateProjectRequest;
 import com.philia.projectservice.catalog.internal.adapter.in.web.mapper.CreateProjectWebMapper;
 import com.philia.projectservice.catalog.internal.adapter.in.web.mapper.ProjectDetailWebMapper;
 import com.philia.projectservice.catalog.internal.adapter.in.web.mapper.ProjectTagsWebMapper;
+import com.philia.projectservice.catalog.internal.adapter.in.web.mapper.UpdateProjectWebMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -38,8 +40,10 @@ class ProjectCommandControllerTest {
         ReplaceProjectTagsUseCase replaceTagsUseCase = command -> new ReplaceProjectTagsResult(
                 command.projectId(), List.of(), command.expectedVersion() + 1);
         ProjectTagsWebMapper tagsMapper = Mappers.getMapper(ProjectTagsWebMapper.class);
+        UpdateProjectUseCase updateProjectUseCase = command -> result;
+        UpdateProjectWebMapper updateMapper = Mappers.getMapper(UpdateProjectWebMapper.class);
         var controller = new ProjectCommandController(
-                useCase, createMapper, detailMapper, replaceTagsUseCase, tagsMapper);
+                useCase, createMapper, detailMapper, replaceTagsUseCase, tagsMapper, updateProjectUseCase, updateMapper);
         var servletRequest = new MockHttpServletRequest("POST", "/api/v1/projects");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest));
 
