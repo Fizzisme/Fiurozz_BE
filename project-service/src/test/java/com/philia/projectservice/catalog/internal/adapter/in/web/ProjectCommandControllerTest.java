@@ -44,7 +44,7 @@ class ProjectCommandControllerTest {
         UpdateProjectWebMapper updateMapper = Mappers.getMapper(UpdateProjectWebMapper.class);
         var controller = new ProjectCommandController(
                 useCase, createMapper, detailMapper, replaceTagsUseCase, tagsMapper, updateProjectUseCase, updateMapper);
-        var servletRequest = new MockHttpServletRequest("POST", "/api/v1/projects");
+        var servletRequest = new MockHttpServletRequest("POST", "/v1/projects");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(servletRequest));
 
         var response = controller.createProject(new CreateProjectRequest(
@@ -63,7 +63,7 @@ class ProjectCommandControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getHeaders().getLocation()).isNotNull();
         assertThat(response.getHeaders().getLocation().getPath())
-                .isEqualTo("/api/v1/projects/" + result.id());
+                .isEqualTo("/v1/projects/" + result.id());
         assertThat(response.getHeaders().getETag()).isEqualTo("\"0\"");
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().success()).isTrue();

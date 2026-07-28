@@ -18,3 +18,22 @@ routes:
       requests: 10
       window: 1m
       burst: 5
+
+  - name: project
+    prefix: /api/project
+    upstream: ${PROJECT_SERVICE}
+
+    timeout: 5s
+
+    retry:
+      attempts: 3
+      base_delay: 1s
+      max_delay: 3s
+
+    breaker:
+      enabled: true
+
+    rate_limit:
+      requests: 30
+      window: 1m
+      burst: 10

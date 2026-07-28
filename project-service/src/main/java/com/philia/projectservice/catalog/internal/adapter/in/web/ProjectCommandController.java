@@ -32,7 +32,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/projects")
+@RequestMapping("/v1/projects")
 public final class ProjectCommandController implements CreateProjectApiDocumentation, ReplaceProjectTagsApiDocumentation,
         UpdateProjectApiDocumentation {
 

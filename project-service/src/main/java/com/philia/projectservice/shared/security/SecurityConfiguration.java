@@ -26,8 +26,8 @@ public class SecurityConfiguration {
                         .accessDeniedHandler(apiAccessDeniedHandler)
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/api/v1/projects").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/projects/*").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/v1/projects").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/v1/projects/*").authenticated()
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(gatewayHeaderAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
