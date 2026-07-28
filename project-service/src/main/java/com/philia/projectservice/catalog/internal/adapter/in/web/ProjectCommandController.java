@@ -5,10 +5,13 @@ import com.philia.projectservice.catalog.api.DeleteProjectCommand;
 import com.philia.projectservice.catalog.api.DeleteProjectUseCase;
 import com.philia.projectservice.catalog.api.ReplaceProjectTagsUseCase;
 import com.philia.projectservice.catalog.api.UpdateProjectUseCase;
+import com.philia.projectservice.catalog.api.PublishProjectCommand;
+import com.philia.projectservice.catalog.api.PublishProjectUseCase;
 import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.CreateProjectApiDocumentation;
 import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.DeleteProjectApiDocumentation;
 import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.ReplaceProjectTagsApiDocumentation;
 import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.UpdateProjectApiDocumentation;
+import com.philia.projectservice.catalog.internal.adapter.in.web.documentation.PublishProjectApiDocumentation;
 import com.philia.projectservice.catalog.internal.adapter.in.web.dto.request.CreateProjectRequest;
 import com.philia.projectservice.catalog.internal.adapter.in.web.dto.request.ReplaceProjectTagsRequest;
 import com.philia.projectservice.catalog.internal.adapter.in.web.dto.request.UpdateProjectRequest;
@@ -38,7 +41,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/v1/projects")
 public final class ProjectCommandController implements CreateProjectApiDocumentation, ReplaceProjectTagsApiDocumentation,
-        UpdateProjectApiDocumentation, DeleteProjectApiDocumentation {
+        UpdateProjectApiDocumentation, DeleteProjectApiDocumentation, PublishProjectApiDocumentation {
 
     private final CreateProjectUseCase createProjectUseCase;
     private final CreateProjectWebMapper createProjectWebMapper;
@@ -48,6 +51,7 @@ public final class ProjectCommandController implements CreateProjectApiDocumenta
     private final UpdateProjectUseCase updateProjectUseCase;
     private final UpdateProjectWebMapper updateProjectWebMapper;
     private final DeleteProjectUseCase deleteProjectUseCase;
+    private final PublishProjectUseCase publishProjectUseCase;
 
     public ProjectCommandController(
             CreateProjectUseCase createProjectUseCase,
@@ -57,7 +61,8 @@ public final class ProjectCommandController implements CreateProjectApiDocumenta
             ProjectTagsWebMapper projectTagsWebMapper,
             UpdateProjectUseCase updateProjectUseCase,
             UpdateProjectWebMapper updateProjectWebMapper,
-            DeleteProjectUseCase deleteProjectUseCase
+            DeleteProjectUseCase deleteProjectUseCase,
+            PublishProjectUseCase publishProjectUseCase
     ) {
         this.createProjectUseCase = createProjectUseCase;
         this.createProjectWebMapper = createProjectWebMapper;
@@ -67,6 +72,7 @@ public final class ProjectCommandController implements CreateProjectApiDocumenta
         this.updateProjectUseCase = updateProjectUseCase;
         this.updateProjectWebMapper = updateProjectWebMapper;
         this.deleteProjectUseCase = deleteProjectUseCase;
+        this.publishProjectUseCase = publishProjectUseCase;
     }
 
     @DeleteMapping("/{projectId}")
@@ -77,6 +83,24 @@ public final class ProjectCommandController implements CreateProjectApiDocumenta
     ) {
         deleteProjectUseCase.deleteProject(new DeleteProjectCommand(projectId, parseEtag(ifMatch)));
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{projectId}/publish")
+    @Override
+    public ResponseEntity<ApiResponse<ProjectDetailResponse>> publishProject(
+            @PathVariable UUID projectId,
+            @RequestHeader("If-Match") String ifMatch
+    ) {
+        var result = publishProjectUseCase.publishProject(new PublishProjectCommand(projectId, parseEtag(ifMatch)));
+        var response = projectDetailWebMapper.toResponse(result);
+
+        return ResponseEntity.ok()
+                .eTag('"' + Long.toString(response.version()) + '"')
+                .body(ApiResponse.success(
+                        "PROJECT_PUBLISHED",
+                        "Project published successfully.",
+                        response
+                ));
     }
 
     @PatchMapping("/{projectId}")

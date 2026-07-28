@@ -8,6 +8,7 @@ import com.philia.projectservice.catalog.internal.application.exception.SubCateg
 import com.philia.projectservice.catalog.internal.application.exception.ProjectStaleVersionException;
 import com.philia.projectservice.catalog.internal.application.exception.ProjectNotEditableException;
 import com.philia.projectservice.catalog.internal.application.exception.ProjectNotDeletableException;
+import com.philia.projectservice.catalog.internal.application.exception.ProjectInvalidStateException;
 import com.philia.projectservice.catalog.internal.application.exception.TagsUnavailableException;
 import com.philia.projectservice.catalog.internal.domain.exception.InvalidProjectException;
 import org.springframework.http.HttpStatus;
@@ -80,6 +81,11 @@ public final class ApiExceptionHandler {
     @ExceptionHandler(ProjectNotDeletableException.class)
     public ResponseEntity<ApiResponse<Void>> handleProjectNotDeletable(ProjectNotDeletableException exception) {
         return error(HttpStatus.CONFLICT, "PROJECT_NOT_DELETABLE", exception.getMessage());
+    }
+
+    @ExceptionHandler(ProjectInvalidStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleProjectInvalidState(ProjectInvalidStateException exception) {
+        return error(HttpStatus.CONFLICT, "PROJECT_INVALID_STATE", exception.getMessage());
     }
 
     @ExceptionHandler(SubCategoryUnavailableException.class)

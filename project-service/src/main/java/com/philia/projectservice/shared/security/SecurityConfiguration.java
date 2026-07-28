@@ -27,6 +27,7 @@ public class SecurityConfiguration {
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/v1/projects").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/v1/projects/*/publish").authenticated()
                         .requestMatchers(HttpMethod.GET, "/v1/me/projects").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/v1/projects/*").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/v1/projects/*").authenticated()

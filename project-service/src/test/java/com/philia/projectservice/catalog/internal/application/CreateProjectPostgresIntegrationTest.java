@@ -296,6 +296,50 @@ class CreateProjectPostgresIntegrationTest {
     }
 
     @Test
+    void publishesOwnedDraftProjectThroughHttpApi() throws Exception {
+        var ownerId = UUID.randomUUID();
+        var categoryId = UUID.randomUUID();
+        var subCategoryId = UUID.randomUUID();
+        var tagId = UUID.randomUUID();
+        var suffix = UUID.randomUUID().toString();
+        insertReferences(categoryId, subCategoryId, tagId, suffix);
+        authenticate(ownerId);
+
+        var created = createProjectUseCase.create(new CreateProjectCommand(
+                subCategoryId, "Fiurozz Backend", "Fiurozz Backend " + suffix,
+                "A project catalog backend", "The complete project description", "https://demo.example.com",
+                "PUBLIC", List.of("Java"), List.of("Project Catalog"), List.of(tagId)
+        ));
+
+        mockMvc().perform(post("/v1/projects/{projectId}/publish", created.id())
+                        .header("Authorization", "Bearer test-token")
+                        .header(GatewayHeaderAuthenticationFilter.USER_ID_HEADER, ownerId)
+                        .header(GatewayHeaderAuthenticationFilter.USER_EMAIL_HEADER, "owner@example.com")
+                        .header(GatewayHeaderAuthenticationFilter.USER_DISPLAY_NAME_HEADER, "Project Owner")
+                        .header("If-Match", "\"0\""))
+                .andExpect(status().isOk())
+                .andExpect(header().string("ETag", "\"1\""))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value("PROJECT_PUBLISHED"))
+                .andExpect(jsonPath("$.data.status").value("PUBLISHED"))
+                .andExpect(jsonPath("$.data.publishedAt").exists())
+                .andExpect(jsonPath("$.data.version").value(1));
+
+        var state = jdbcClient.sql("""
+                        SELECT status, published_at IS NOT NULL AS published, row_version
+                        FROM projects WHERE id = :projectId
+                        """)
+                .param("projectId", created.id())
+                .query((resultSet, rowNumber) -> List.of(
+                        resultSet.getString("status"),
+                        Boolean.toString(resultSet.getBoolean("published")),
+                        Long.toString(resultSet.getLong("row_version"))
+                ))
+                .single();
+        assertThat(state).containsExactly("PUBLISHED", "true", "1");
+    }
+
+    @Test
     void wrapsMissingAuthenticationInApiResponse() throws Exception {
         SecurityContextHolder.clearContext();
 
@@ -313,7 +357,7 @@ class CreateProjectPostgresIntegrationTest {
         mockMvc().perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.info.title").value("Fiurozz Project Service API"))
-                .andExpect(jsonPath("$.paths.length()").value(4))
+                .andExpect(jsonPath("$.paths.length()").value(5))
                 .andExpect(jsonPath("$['paths']['/v1/projects']['post']['operationId']")
                         .value("createProject"))
                 .andExpect(jsonPath("$['paths']['/v1/projects']['post']['security'][0]['bearerAuth']")
@@ -324,6 +368,8 @@ class CreateProjectPostgresIntegrationTest {
                         .value("updateProject"))
                 .andExpect(jsonPath("$['paths']['/v1/projects/{projectId}']['delete']['operationId']")
                         .value("deleteProject"))
+                .andExpect(jsonPath("$['paths']['/v1/projects/{projectId}/publish']['post']['operationId']")
+                        .value("publishProject"))
                 .andExpect(jsonPath("$['paths']['/v1/projects']['post']['responses']['201']")
                         .exists())
                 .andExpect(jsonPath("$['components']['securitySchemes']['bearerAuth']['scheme']")
