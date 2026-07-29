@@ -47,6 +47,7 @@ model OauthAccount {
 
 model RefreshToken {
   id String @id @default(uuid())
+  jti String @unique
   userId String @map("user_id")
   tokenHash String @map("token_hash")
   deviceName String? @map("device_name")

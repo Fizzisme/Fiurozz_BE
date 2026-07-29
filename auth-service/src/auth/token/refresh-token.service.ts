@@ -11,10 +11,11 @@ export class RefreshTokenService {
 
     async save(
         userId: string,
+        jti: string,
         refreshToken: string,
-        deviceName: string,
-        userAgent: string,
-        ipAddress: string,
+        deviceName?: string,
+        userAgent?: string,
+        ipAddress?: string,
     ) {
 
         const tokenHash = await hash(refreshToken, 10);
@@ -26,6 +27,8 @@ export class RefreshTokenService {
                 userId,
 
                 tokenHash,
+
+                jti,
 
                 expiresAt: new Date(
                     Date.now() +
@@ -40,6 +43,10 @@ export class RefreshTokenService {
 
         });
 
+    }
+
+    async findByJti(jti: string) {
+        return this.prisma.refreshToken.findUnique({where: {jti: jti}});
     }
 
 }
