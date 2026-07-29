@@ -18,3 +18,5 @@ routes:
       requests: 10
       window: 1m
       burst: 5
+
+    auth_mode: optional
