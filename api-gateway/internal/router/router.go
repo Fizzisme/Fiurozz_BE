@@ -34,12 +34,14 @@ func SetupRouter(
 	// Global middleware chain, applied to every route, in order:
 	//   1. Recovery    - recovers panics from route handlers
 	//   2. RequestID   - assigns a request ID, used by Logger below
+	//   3. ClientInfo
 	//   3. otelgin     - starts a tracing span for the request
 	//   4. Logger      - logs method/path/status/duration/request ID
 	//   5. Metrics     - records request count + latency in Prometheus
 	r.Use(
 		gin.Recovery(),
 		middleware.RequestID(),
+		middleware.ClientInfo(),
 		otelgin.Middleware(cfg.AppName),
 		middleware.Logger(),
 		middleware.Metrics(),

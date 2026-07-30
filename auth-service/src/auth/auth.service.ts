@@ -7,49 +7,50 @@ import {RefreshTokenService} from "./token/refresh-token.service.js";
 import {JwtTokenService} from "./jwt/jwt-token.service.js";
 import type { Request, Response } from 'express';
 
+import {TokenService} from "./token/token.service.js";
+import {IUser} from "../user/interfaces/user.interface.js";
+import {UserService} from "../user/user.service.js";
+import {OauthAccountService} from "../oauth-account/oauth-account.service.js";
+import {IOAuthUser} from "../oauth-account/interfaces/oauth-user.interface.js";
+
 @Injectable()
 export class AuthService {
     constructor(
+        private readonly userService: UserService,
         private readonly prismaService: PrismaService,
         private readonly passwordService: PasswordService,
         private readonly refreshTokenService: RefreshTokenService,
         private readonly jwtTokenService: JwtTokenService,
+        private readonly oauthService: OauthAccountService,
+        private readonly tokenService: TokenService,
     ) {}
     async register (data: RegisterDto) {
 
-        const existed = await this.prismaService.user.findUnique({
-            where: {
-                email: data.email,
-            }
-        })
+        const user : IUser | null = await this.userService.findUserByEmail(data.email);
 
-        if (existed) {
+        if (user) {
             throw new BadRequestException('Email already exists.');
         }
 
         const passwordHash = await this.passwordService.hashPassword(data.password);
 
-        await this.prismaService.user.create({
-            data: {
+        await this.userService.createUser(
+            {
                 email: data.email,
                 fullName: data.fullName,
                 displayName: data.displayName,
                 passwordHash: passwordHash,
-            },
-        })
+            }
+        )
 
          return {
              message: 'Register successfully.',
          };
     }
 
-    async login(data: LoginDto, res: Response) {
+    async login(data: LoginDto, req: Request, res: Response) {
 
-        const user = await this.prismaService.user.findUnique({
-            where: {
-                email: data.email,
-            }
-        })
+        const user : IUser | null = await this.userService.findUserByEmail(data.email);
 
         if (!user) {
             throw new UnauthorizedException('Invalid email or password.');
@@ -63,31 +64,12 @@ export class AuthService {
             throw new UnauthorizedException('Invalid email or password.');
         }
 
-        const tokens = await this.jwtTokenService.generateTokens(user);
-
-
-        await this.refreshTokenService.save(
-            user.id,
-            tokens.jti,
-            tokens.refreshToken,
-            data.deviceName,
-            data.userAgent,
-            data.ipAddress,
-
-        );
-
-        res.cookie("refreshToken", tokens.refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            path: "/api/auth/refresh",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        })
-
-        return {
-            message: 'Login successfully.',
-            ...tokens,
-        };
+        return this.tokenService.issueToken(user,{
+                deviceName: req.headers['x-device-name'] as string | undefined,
+                userAgent: req.headers['user-agent'],
+                ipAddress: req.ip,
+            },
+            res)
     }
 
     async refresh(req: Request, res: Response) {
@@ -108,9 +90,7 @@ export class AuthService {
             throw new UnauthorizedException();
         }
 
-        const user = await this.prismaService.user.findUnique({
-            where: { id: payload.sub },
-        });
+        const user: IUser | null = await this.userService.findUserById(payload.sub);
         if (!user) {
             throw new UnauthorizedException();
         }
@@ -145,4 +125,23 @@ export class AuthService {
         return { accessToken: tokens.accessToken };
     }
 
+    async oauthLogin(req: Request, res: Response) {
+
+        const profile = req.user as IOAuthUser;
+
+        if (profile.provider === "github" && !profile.email) {
+            throw new UnauthorizedException(
+                "A verified email is required to sign in with GitHub.",
+            );
+        }
+
+        const user: IUser = await this.oauthService.loginWithOauth(profile)
+
+        return this.tokenService.issueToken(user,{
+            deviceName: req.get("x-device-name"),
+            userAgent: req.get("user-agent"),
+            ipAddress: req.ip,
+        },
+        res)
+    }
 }
