@@ -1,9 +1,11 @@
-import {Body, Controller, Post, Res, Req} from '@nestjs/common';
+import {Body, Controller, Post, Res, Req, Get, UseGuards} from '@nestjs/common';
 
 import {AuthService} from "./auth.service.js";
 import {RegisterDto} from "./dto/register.dto.js";
 import {LoginDto}  from "./dto/login.dto.js";
 import type { Request, Response } from 'express';
+import {GoogleGuard} from "../oauth-account/guard/google.guard.js";
+
 
 /**
  * Handles authentication endpoints: registration, login, and
@@ -26,8 +28,8 @@ export class AuthController {
     // res directly while Nest still sends the returned body as the
     // JSON response.
     @Post('login')
-    login (@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response){
-        return this.authService.login(dto, res)
+    login (@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response){
+        return this.authService.login(dto, req, res)
     }
 
     // Issues a new access token using the refresh token (read from
@@ -38,4 +40,13 @@ export class AuthController {
         return this.authService.refresh(req, res)
     }
 
+    @Get('oauth/google')
+    @UseGuards(GoogleGuard)
+    googleLogin(){}
+
+    @Get("oauth/google/callback")
+    @UseGuards(GoogleGuard)
+    googleCallback(@Req() req: any, @Res({ passthrough: true }) res:Response) {
+        return this.authService.googleLogin(req, res)
+    }
 }
