@@ -4,7 +4,8 @@ import {AuthService} from "./auth.service.js";
 import {RegisterDto} from "./dto/register.dto.js";
 import {LoginDto}  from "./dto/login.dto.js";
 import type { Request, Response } from 'express';
-import {GoogleGuard} from "../oauth-account/guard/google.guard.js";
+import {GoogleGuard} from "../oauth-account/guards/google.guard.js";
+import {GithubGuard} from "../oauth-account/guards/github.guard.js";
 
 
 /**
@@ -46,7 +47,20 @@ export class AuthController {
 
     @Get("oauth/google/callback")
     @UseGuards(GoogleGuard)
-    googleCallback(@Req() req: any, @Res({ passthrough: true }) res:Response) {
-        return this.authService.googleLogin(req, res)
+    googleCallback(@Req() req: Request, @Res({ passthrough: true }) res:Response) {
+        return this.authService.oauthLogin(req, res)
+    }
+
+    @Get("oauth/github")
+    @UseGuards(GithubGuard)
+    githubLogin() {}
+
+    @Get("oauth/github/callback")
+    @UseGuards(GithubGuard)
+    githubCallback(
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response,
+    ) {
+        return this.authService.oauthLogin(req, res);
     }
 }

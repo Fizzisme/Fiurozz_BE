@@ -125,18 +125,23 @@ export class AuthService {
         return { accessToken: tokens.accessToken };
     }
 
-    async googleLogin(req: Request, res: Response) {
+    async oauthLogin(req: Request, res: Response) {
 
         const profile = req.user as IOAuthUser;
+
+        if (profile.provider === "github" && !profile.email) {
+            throw new UnauthorizedException(
+                "A verified email is required to sign in with GitHub.",
+            );
+        }
 
         const user: IUser = await this.oauthService.loginWithOauth(profile)
 
         return this.tokenService.issueToken(user,{
-            deviceName: req.headers['x-device-name'] as string | undefined,
-            userAgent: req.headers['user-agent'],
+            deviceName: req.get("x-device-name"),
+            userAgent: req.get("user-agent"),
             ipAddress: req.ip,
         },
         res)
     }
-
 }
