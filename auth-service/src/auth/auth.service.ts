@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, UnauthorizedException} from '@nestjs/common';
+import {BadRequestException, Injectable, NotFoundException, UnauthorizedException} from '@nestjs/common';
 import {RegisterDto} from "./dto/register.dto.js";
 import {PrismaService} from "../prisma/prisma.service.js";
 import {LoginDto} from "./dto/login.dto.js";
@@ -118,7 +118,7 @@ export class AuthService {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            path: '/api/auth/refresh',
+            path: '/api/auth',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
@@ -143,5 +143,104 @@ export class AuthService {
             ipAddress: req.ip,
         },
         res)
+    }
+
+    async logout(
+        req: Request,
+        res: Response,
+    ) {
+
+        const refreshToken =
+            req.cookies.refreshToken;
+
+        if (!refreshToken) {
+            return {
+                message: "Logout successfully.",
+            };
+        }
+
+        try {
+
+            const payload =
+                await this.jwtTokenService.verifyRefreshToken(
+                    refreshToken,
+                );
+
+            await this.refreshTokenService.deleteByJti(
+                payload.jti,
+            );
+
+        } catch {
+            // Ignore invalid/expired refresh token.
+        }
+
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure:
+                process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            path: "/api/auth",
+        });
+
+        return {
+            message: "Logout successfully.",
+        };
+    }
+
+    async getSessions(req: Request) {
+
+        const userId = req.get("x-user-id");
+
+        if (!userId) {
+            throw new UnauthorizedException();
+        }
+
+        return this.refreshTokenService.getSessions(
+            userId,
+        );
+    }
+
+    async logoutSession(
+        sessionId: string,
+        req: Request,
+    ) {
+
+        const userId = req.get("x-user-id");
+
+        if (!userId) {
+            throw new UnauthorizedException();
+        }
+
+        const result = await this.refreshTokenService.deleteSession(
+            sessionId,
+            userId,
+        );
+
+        if (result.count === 0) {
+            throw new NotFoundException(
+                "Session not found.",
+            );
+        }
+
+        return {
+            message: "Session removed successfully.",
+        };
+    }
+
+    async logoutAll(req: Request) {
+
+        const userId = req.get("x-user-id");
+
+        if (!userId) {
+            throw new UnauthorizedException();
+        }
+
+        await this.refreshTokenService.deleteAllSessions(
+            userId,
+        );
+
+        return {
+            message: "Logged out from all devices.",
+        };
     }
 }

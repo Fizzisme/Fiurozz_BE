@@ -1,4 +1,4 @@
-import {Body, Controller, Post, Res, Req, Get, UseGuards} from '@nestjs/common';
+import {Body, Controller, Post, Res, Req, Get, UseGuards, Param, Delete} from '@nestjs/common';
 
 import {AuthService} from "./auth.service.js";
 import {RegisterDto} from "./dto/register.dto.js";
@@ -62,5 +62,38 @@ export class AuthController {
         @Res({ passthrough: true }) res: Response,
     ) {
         return this.authService.oauthLogin(req, res);
+    }
+
+    @Post("logout")
+    logout(
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response,
+    ) {
+        return this.authService.logout(req, res);
+    }
+
+    @Get("sessions")
+    getSessions(
+        @Req() req: Request,
+    ) {
+        return this.authService.getSessions(req);
+    }
+
+    @Delete("sessions/:id")
+    logoutSession(
+        @Param("id") id: string,
+        @Req() req: Request,
+    ) {
+        return this.authService.logoutSession(
+            id,
+            req,
+        );
+    }
+
+    @Post("logout-all")
+    logoutAll(
+        @Req() req: Request,
+    ) {
+        return this.authService.logoutAll(req);
     }
 }
