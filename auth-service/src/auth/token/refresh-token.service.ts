@@ -46,7 +46,51 @@ export class RefreshTokenService {
     }
 
     async findByJti(jti: string) {
-        return this.prisma.refreshToken.findUnique({where: {jti: jti}});
+        return this.prisma.refreshToken.findUnique({where: { jti }});
     }
 
+    async deleteByJti(jti: string) {
+        return this.prisma.refreshToken.delete({where: { jti }});
+    }
+
+    async getSessions(userId: string) {
+        return this.prisma.refreshToken.findMany({
+            where: {
+                userId,
+                revoked: false,
+            },
+            orderBy: {
+                lastUsedAt: "desc",
+            },
+            select: {
+                id: true,
+                deviceName: true,
+                userAgent: true,
+                ipAddress: true,
+                createdAt: true,
+                lastUsedAt: true,
+                expiresAt: true,
+            },
+        });
+    }
+
+    async deleteSession(
+        sessionId: string,
+        userId: string,
+    ) {
+        return this.prisma.refreshToken.deleteMany({
+            where: {
+                id: sessionId,
+                userId,
+            },
+        });
+    }
+
+    async deleteAllSessions(userId: string) {
+        return this.prisma.refreshToken.deleteMany({
+            where: {
+                userId,
+            },
+        });
+    }
 }
