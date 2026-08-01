@@ -3,6 +3,8 @@ import { NestFactory } from '@nestjs/core';
 import {AppModule} from "./app.module.js";
 import {ValidationPipe} from "@nestjs/common";
 import cookieParser from "cookie-parser";
+import {ResponseInterceptor} from "./common/interceptors/response.interceptor.js";
+import {HttpExceptionFilter} from "./common/filters/http-exception.filter.js";
 
 /**
  * Application entry point for the Auth Service.
@@ -26,6 +28,14 @@ async function bootstrap() {
         transform: true,
       }
   ));
+
+  app.useGlobalInterceptors(
+      new ResponseInterceptor(),
+  );
+
+  app.useGlobalFilters(
+      new HttpExceptionFilter(),
+  );
 
     // Parses the Cookie header into req.cookies, needed for reading/
     // issuing auth-related cookies (e.g. refresh token).

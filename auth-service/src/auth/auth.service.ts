@@ -40,6 +40,7 @@ export class AuthService {
                 fullName: data.fullName,
                 displayName: data.displayName,
                 passwordHash: passwordHash,
+                emailVerified: false
             }
         )
 
@@ -122,7 +123,11 @@ export class AuthService {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
-        return { accessToken: tokens.accessToken };
+        return {
+            data: {
+                accessToken: tokens.accessToken
+            }
+        };
     }
 
     async oauthLogin(req: Request, res: Response) {
@@ -176,8 +181,7 @@ export class AuthService {
 
         res.clearCookie("refreshToken", {
             httpOnly: true,
-            secure:
-                process.env.NODE_ENV === "production",
+            secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
             path: "/api/auth",
         });
@@ -195,9 +199,13 @@ export class AuthService {
             throw new UnauthorizedException();
         }
 
-        return this.refreshTokenService.getSessions(
+        const sessions = await this.refreshTokenService.getSessions(
             userId,
         );
+
+        return {
+            data: sessions,
+        }
     }
 
     async logoutSession(
