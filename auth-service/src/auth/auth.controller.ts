@@ -18,7 +18,7 @@ import {GithubGuard} from "../oauth-account/guards/github.guard.js";
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
-    // Creates a new user account.
+    // Creates a new account account.
     @Post('register')
     register (@Body() dto: RegisterDto) {
         return this.authService.register(dto);

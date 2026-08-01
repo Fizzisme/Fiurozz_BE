@@ -8,15 +8,15 @@ import {JwtTokenService} from "./jwt/jwt-token.service.js";
 import type { Request, Response } from 'express';
 
 import {TokenService} from "./token/token.service.js";
-import {IUser} from "../user/interfaces/user.interface.js";
-import {UserService} from "../user/user.service.js";
+import {IAccount} from "../account/interfaces/account.interface.js";
+import {AccountService} from "../account/account.service.js";
 import {OauthAccountService} from "../oauth-account/oauth-account.service.js";
 import {IOAuthUser} from "../oauth-account/interfaces/oauth-user.interface.js";
 
 @Injectable()
 export class AuthService {
     constructor(
-        private readonly userService: UserService,
+        private readonly accountService: AccountService,
         private readonly prismaService: PrismaService,
         private readonly passwordService: PasswordService,
         private readonly refreshTokenService: RefreshTokenService,
@@ -26,15 +26,15 @@ export class AuthService {
     ) {}
     async register (data: RegisterDto) {
 
-        const user : IUser | null = await this.userService.findUserByEmail(data.email);
+        const account : IAccount | null = await this.accountService.findAccountByEmail(data.email);
 
-        if (user) {
+        if (account) {
             throw new BadRequestException('Email already exists.');
         }
 
         const passwordHash = await this.passwordService.hashPassword(data.password);
 
-        await this.userService.createUser(
+        await this.accountService.createAccount(
             {
                 email: data.email,
                 fullName: data.fullName,
@@ -51,21 +51,21 @@ export class AuthService {
 
     async login(data: LoginDto, req: Request, res: Response) {
 
-        const user : IUser | null = await this.userService.findUserByEmail(data.email);
+        const account : IAccount | null = await this.accountService.findAccountByEmail(data.email);
 
-        if (!user) {
+        if (!account) {
             throw new UnauthorizedException('Invalid email or password.');
         }
 
-        if(!user.passwordHash){
+        if(!account.passwordHash){
             throw new UnauthorizedException('This account uses Google/GitHub login.');
         }
 
-        if(!await this.passwordService.comparePassword(data.password,user.passwordHash)){
+        if(!await this.passwordService.comparePassword(data.password,account.passwordHash)){
             throw new UnauthorizedException('Invalid email or password.');
         }
 
-        return this.tokenService.issueToken(user,{
+        return this.tokenService.issueToken(account,{
                 deviceName: req.headers['x-device-name'] as string | undefined,
                 userAgent: req.headers['user-agent'],
                 ipAddress: req.ip,
@@ -91,20 +91,19 @@ export class AuthService {
             throw new UnauthorizedException();
         }
 
-        const user: IUser | null = await this.userService.findUserById(payload.sub);
-        if (!user) {
+        const account: IAccount | null = await this.accountService.findAccountById(payload.sub);
+        if (!account) {
             throw new UnauthorizedException();
         }
 
-        const tokens = await this.jwtTokenService.generateTokens(user);
+        const tokens = await this.jwtTokenService.generateTokens(account);
         const newTokenHash = await this.passwordService.hashPassword(tokens.refreshToken);
 
-        // Xoá token cũ + tạo token mới trong 1 transaction duy nhất
         await this.prismaService.$transaction([
             this.prismaService.refreshToken.delete({ where: { id: token.id } }),
             this.prismaService.refreshToken.create({
                 data: {
-                    userId: user.id,
+                    accountId: account.id,
                     jti: tokens.jti,
                     tokenHash: newTokenHash,
                     deviceName: token.deviceName,
@@ -140,9 +139,9 @@ export class AuthService {
             );
         }
 
-        const user: IUser = await this.oauthService.loginWithOauth(profile)
+        const account: IAccount = await this.oauthService.loginWithOauth(profile)
 
-        return this.tokenService.issueToken(user,{
+        return this.tokenService.issueToken(account,{
             deviceName: req.get("x-device-name"),
             userAgent: req.get("user-agent"),
             ipAddress: req.ip,

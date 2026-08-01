@@ -12,7 +12,7 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
+model Account {
   id String @id @default(uuid())
   fullName String @map("full_name")
   displayName String @unique @map("display_name")
@@ -28,18 +28,18 @@ model User {
   oauthAccounts OauthAccount[]
   refreshTokens RefreshToken[]
 
-  @@map("users")
+  @@map("accounts")
 }
 
 model OauthAccount {
   id String @id @default(uuid())
-  userId String @map("user_id")
+  accountId String @map("account_id")
   provider String
-  providerUserId String @map("provider_user_id")
+  providerAccountId String @map("provider_account_id")
   providerEmail String @map("provider_email")
   createdAt DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@map("oauth_accounts")
 
@@ -48,7 +48,7 @@ model OauthAccount {
 model RefreshToken {
   id String @id @default(uuid())
   jti String @unique
-  userId String @map("user_id")
+  accountId String @map("account_id")
   tokenHash String @map("token_hash")
   deviceName String? @map("device_name")
   userAgent String? @map("user_agent")
@@ -59,7 +59,7 @@ model RefreshToken {
   createdAt DateTime @default(now()) @map("created_at")
   lastUsedAt DateTime @default(now()) @map("last_used_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
 }

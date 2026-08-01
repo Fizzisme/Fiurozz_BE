@@ -27,7 +27,7 @@ export class GoogleStrategy extends PassportStrategy (
 
         const user: IOAuthUser = {
             provider: 'google',
-            providerUserId: profile.id,
+            providerAccountId: profile.id,
             email: profile.emails![0].value,
             fullName: profile.displayName,
             avatar: profile.photos?.[0]?.value,

@@ -1,8 +1,8 @@
 import {Injectable} from "@nestjs/common";
-import {IUser} from "../user/interfaces/user.interface.js";
+import {IAccount} from "../account/interfaces/account.interface.js";
 import {IOAuthUser} from "./interfaces/oauth-user.interface.js";
 import {PrismaService} from "../prisma/prisma.service.js";
-import {UserService} from "../user/user.service.js";
+import {AccountService} from "../account/account.service.js";
 
 
 @Injectable()
@@ -10,30 +10,30 @@ export class OauthAccountService {
 
     constructor(
         private readonly prisma: PrismaService,
-        private readonly userService: UserService,
+        private readonly accountService: AccountService,
     ) {}
 
-    async loginWithOauth(profile: IOAuthUser) : Promise<IUser> {
+    async loginWithOauth(profile: IOAuthUser) : Promise<IAccount> {
         const oauthAccount = await this.prisma.oauthAccount.findFirst({
             where: {
                 provider: profile.provider,
-                providerUserId: profile.providerUserId,
+                providerAccountId: profile.providerAccountId,
             },
             include: {
-                user: true,
+                account: true,
             }
         })
 
-        if(oauthAccount) return oauthAccount.user;
+        if(oauthAccount) return oauthAccount.account;
 
-        let user: IUser | null = await this.prisma.user.findUnique({
+        let account: IAccount | null = await this.prisma.account.findUnique({
             where: {
                 email: profile.email,
             }
         })
 
-        if (!user) {
-            user = await this.userService.createUser({
+        if (!account) {
+            account = await this.accountService.createAccount({
                     email: profile.email,
                     fullName: profile.fullName,
                     displayName: profile.fullName,
@@ -45,13 +45,13 @@ export class OauthAccountService {
         await this.prisma.oauthAccount.create({
             data: {
                 provider: profile.provider,
-                providerUserId: profile.providerUserId,
+                providerAccountId: profile.providerAccountId,
                 providerEmail: profile.email,
-                userId: user.id,
+                accountId: account.id,
             },
         });
 
-        return user;
+        return account;
     }
 
 }
