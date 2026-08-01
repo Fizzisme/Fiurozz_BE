@@ -1,25 +1,25 @@
 import {Injectable} from "@nestjs/common";
 import {PrismaService} from "../prisma/prisma.service.js";
-import {IUser} from "./interfaces/user.interface.js";
+import {IAccount} from "./interfaces/account.interface.js";
 
 @Injectable()
-export class UserService {
+export class AccountService {
     constructor(private readonly prisma: PrismaService) {}
 
-    async findUserByEmail(email: string):  Promise<IUser | null> {
-        return this.prisma.user.findUnique({
+    async findAccountByEmail(email: string):  Promise<IAccount | null> {
+        return this.prisma.account.findUnique({
             where: { email }
         })
     }
 
-    async findUserById(id: string):  Promise<IUser | null> {
-        return this.prisma.user.findUnique({
+    async findAccountById(id: string):  Promise<IAccount | null> {
+        return this.prisma.account.findUnique({
             where: { id }
         })
     }
 
-    async createUser(data: Omit<IUser, 'id'  | 'status' | 'roles' | 'createdAt' | 'updatedAt' | 'lastLoginAt'>): Promise<IUser> {
-        return this.prisma.user.create({
+    async createAccount(data: Omit<IAccount, 'id'  | 'status' | 'roles' | 'createdAt' | 'updatedAt' | 'lastLoginAt'>): Promise<IAccount> {
+        return this.prisma.account.create({
             data: {
                 email: data.email,
                 fullName:  data.fullName,

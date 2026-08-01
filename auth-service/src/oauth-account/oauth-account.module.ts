@@ -1,6 +1,6 @@
 import {Module} from "@nestjs/common";
 import {OauthAccountService} from "./oauth-account.service.js";
-import {UserModule} from "../user/user.module.js";
+import {AccountModule} from "../account/account.module.js";
 import {GoogleStrategy} from "./strategy/google.strategy.js";
 import {PassportModule} from "@nestjs/passport";
 import {GithubStrategy} from "./strategy/github.strategy.js";
@@ -8,7 +8,7 @@ import {GithubStrategy} from "./strategy/github.strategy.js";
 
 @Module({
     imports: [
-        UserModule,
+        AccountModule,
         PassportModule.register({
             session: false,
         }),

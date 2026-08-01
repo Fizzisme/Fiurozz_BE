@@ -10,7 +10,7 @@ export class RefreshTokenService {
     ) {}
 
     async save(
-        userId: string,
+        accountId: string,
         jti: string,
         refreshToken: string,
         deviceName?: string,
@@ -24,7 +24,7 @@ export class RefreshTokenService {
 
             data: {
 
-                userId,
+                accountId,
 
                 tokenHash,
 
@@ -53,10 +53,10 @@ export class RefreshTokenService {
         return this.prisma.refreshToken.delete({where: { jti }});
     }
 
-    async getSessions(userId: string) {
+    async getSessions(accountId: string) {
         return this.prisma.refreshToken.findMany({
             where: {
-                userId,
+                accountId,
                 revoked: false,
             },
             orderBy: {
@@ -76,20 +76,20 @@ export class RefreshTokenService {
 
     async deleteSession(
         sessionId: string,
-        userId: string,
+        accountId: string,
     ) {
         return this.prisma.refreshToken.deleteMany({
             where: {
                 id: sessionId,
-                userId,
+                accountId,
             },
         });
     }
 
-    async deleteAllSessions(userId: string) {
+    async deleteAllSessions(accountId: string) {
         return this.prisma.refreshToken.deleteMany({
             where: {
-                userId,
+                accountId,
             },
         });
     }

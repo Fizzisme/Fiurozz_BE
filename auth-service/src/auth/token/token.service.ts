@@ -3,7 +3,7 @@ import {JwtTokenService} from "../jwt/jwt-token.service.js";
 import {RefreshTokenService} from "./refresh-token.service.js";
 import type {Response} from "express";
 import {DeviceInfo} from "../interfaces/device-info.interface.js";
-import {IUser} from "../../user/interfaces/user.interface.js";
+import {IAccount} from "../../account/interfaces/account.interface.js";
 
 @Injectable()
 export class TokenService{
@@ -11,11 +11,11 @@ export class TokenService{
         private readonly jwtTokenService: JwtTokenService,
         private readonly refreshTokenService: RefreshTokenService,
     ){}
-    async issueToken(user: IUser, device: DeviceInfo, res: Response){
-        const tokens = await this.jwtTokenService.generateTokens(user);
+    async issueToken(account: IAccount, device: DeviceInfo, res: Response){
+        const tokens = await this.jwtTokenService.generateTokens(account);
 
         await this.refreshTokenService.save(
-            user.id,
+            account.id,
             tokens.jti,
             tokens.refreshToken,
             device.deviceName,
