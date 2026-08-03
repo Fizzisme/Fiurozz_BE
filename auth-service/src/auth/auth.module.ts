@@ -8,6 +8,7 @@ import {RefreshTokenService} from "./token/refresh-token.service.js";
 import {TokenService} from "./token/token.service.js";
 import {AccountModule} from "../account/account.module.js";
 import {OauthAccountModule} from "../oauth-account/oauth-account.module.js";
+import {OutboxEventModule} from "../outboxEvent/outbox-event.module.js";
 
 
 @Module({
@@ -15,6 +16,7 @@ import {OauthAccountModule} from "../oauth-account/oauth-account.module.js";
         JwtModule.register({}),
         AccountModule,
         OauthAccountModule,
+        OutboxEventModule
     ],
     controllers:[AuthController],
     providers: [

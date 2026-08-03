@@ -4,10 +4,12 @@ import {AccountModule} from "../account/account.module.js";
 import {GoogleStrategy} from "./strategy/google.strategy.js";
 import {PassportModule} from "@nestjs/passport";
 import {GithubStrategy} from "./strategy/github.strategy.js";
+import {OutboxEventModule} from "../outboxEvent/outbox-event.module.js";
 
 
 @Module({
     imports: [
+        OutboxEventModule,
         AccountModule,
         PassportModule.register({
             session: false,

@@ -18,9 +18,10 @@ export class AccountService {
         })
     }
 
-    async createAccount(data: Omit<IAccount, 'id'  | 'status' | 'roles' | 'createdAt' | 'updatedAt' | 'lastLoginAt'>): Promise<IAccount> {
+    createAccount(data: Omit<IAccount,  'status' | 'roles' | 'createdAt' | 'updatedAt' | 'lastLoginAt'>) {
         return this.prisma.account.create({
             data: {
+                id: data.id,
                 email: data.email,
                 fullName:  data.fullName,
                 displayName: data.displayName,

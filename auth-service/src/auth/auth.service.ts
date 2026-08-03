@@ -6,12 +6,13 @@ import {PasswordService} from "./password/password.service.js";
 import {RefreshTokenService} from "./token/refresh-token.service.js";
 import {JwtTokenService} from "./jwt/jwt-token.service.js";
 import type { Request, Response } from 'express';
-
+import {uuidv7} from 'uuidv7';
 import {TokenService} from "./token/token.service.js";
 import {IAccount} from "../account/interfaces/account.interface.js";
 import {AccountService} from "../account/account.service.js";
 import {OauthAccountService} from "../oauth-account/oauth-account.service.js";
 import {IOAuthUser} from "../oauth-account/interfaces/oauth-user.interface.js";
+import {OutboxEventService} from "../outboxEvent/outbox-event.service.js";
 
 @Injectable()
 export class AuthService {
@@ -23,6 +24,7 @@ export class AuthService {
         private readonly jwtTokenService: JwtTokenService,
         private readonly oauthService: OauthAccountService,
         private readonly tokenService: TokenService,
+        private readonly outboxEventService: OutboxEventService
     ) {}
     async register (data: RegisterDto) {
 
@@ -33,16 +35,28 @@ export class AuthService {
         }
 
         const passwordHash = await this.passwordService.hashPassword(data.password);
+        const accountId = uuidv7();
 
-        await this.accountService.createAccount(
-            {
+        await this.prismaService.$transaction([
+            this.accountService.createAccount({
+                id: accountId,
                 email: data.email,
                 fullName: data.fullName,
                 displayName: data.displayName,
                 passwordHash: passwordHash,
                 emailVerified: false
-            }
-        )
+            }),
+            this.outboxEventService.create(
+                accountId,
+                "account.created",
+                {
+                    id: accountId,
+                    email: data.email,
+                    fullName: data.fullName,
+                    displayName: data.displayName
+                }
+            ),
+        ]);
 
          return {
              message: 'Register successfully.',
@@ -98,11 +112,13 @@ export class AuthService {
 
         const tokens = await this.jwtTokenService.generateTokens(account);
         const newTokenHash = await this.passwordService.hashPassword(tokens.refreshToken);
+        const refreshId = uuidv7();
 
         await this.prismaService.$transaction([
             this.prismaService.refreshToken.delete({ where: { id: token.id } }),
             this.prismaService.refreshToken.create({
                 data: {
+                    id: refreshId,
                     accountId: account.id,
                     jti: tokens.jti,
                     tokenHash: newTokenHash,
