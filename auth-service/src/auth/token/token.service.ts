@@ -5,6 +5,9 @@ import type {Response} from "express";
 import {DeviceInfo} from "../interfaces/device-info.interface.js";
 import {IAccount} from "../../account/interfaces/account.interface.js";
 
+// Shared token-issuance logic used by every login flow (password login,
+// Google OAuth callback, etc.) so they all end up with identical
+// token generation, session persistence, and cookie behavior.
 @Injectable()
 export class TokenService{
     constructor(
@@ -14,6 +17,9 @@ export class TokenService{
     async issueToken(account: IAccount, device: DeviceInfo, res: Response){
         const tokens = await this.jwtTokenService.generateTokens(account);
 
+        // Persist the refresh token as a revocable session (see
+        // RefreshTokenService), tied to this device/IP for the
+        // "active sessions" list and later revocation.
         await this.refreshTokenService.save(
             account.id,
             tokens.jti,

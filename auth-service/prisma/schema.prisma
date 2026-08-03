@@ -13,7 +13,7 @@ datasource db {
 }
 
 model Account {
-  id String @id @default(uuid())
+  id String @id @db.Uuid
   fullName String @map("full_name")
   displayName String @unique @map("display_name")
   email String @unique
@@ -32,8 +32,8 @@ model Account {
 }
 
 model OauthAccount {
-  id String @id @default(uuid())
-  accountId String @map("account_id")
+  id String @id @db.Uuid
+  accountId String @map("account_id") @db.Uuid
   provider String
   providerAccountId String @map("provider_account_id")
   providerEmail String @map("provider_email")
@@ -46,9 +46,9 @@ model OauthAccount {
 }
 
 model RefreshToken {
-  id String @id @default(uuid())
+  id String @id @db.Uuid
   jti String @unique
-  accountId String @map("account_id")
+  accountId String @map("account_id") @db.Uuid
   tokenHash String @map("token_hash")
   deviceName String? @map("device_name")
   userAgent String? @map("user_agent")
@@ -62,4 +62,17 @@ model RefreshToken {
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
+}
+
+model OutboxEvent {
+  id          String    @id @db.Uuid
+  aggregateId String    @map("aggregate_id") @db.Uuid
+  eventType   String    @map("event_type")
+  payload     Json
+  createdAt   DateTime  @default(now()) @map("created_at")
+  processedAt DateTime? @map("processed_at")
+  attempts    Int       @default(0)
+
+  @@index([processedAt])
+  @@map("outbox_events")
 }

@@ -41,16 +41,24 @@ export class AuthController {
         return this.authService.refresh(req, res)
     }
 
+    // Redirects the user to Google's OAuth consent screen. Handler body
+    // is never reached — GoogleGuard (AuthGuard('google')) intercepts and
+    // issues the redirect before this runs.
     @Get('oauth/google')
     @UseGuards(GoogleGuard)
     googleLogin(){}
 
+
+    // Google redirects back here with the authorization code. GoogleGuard
+    // runs the full code-exchange + profile fetch, then req.user holds
+    // the verified Google profile passed on from GoogleStrategy.validate().
     @Get("oauth/google/callback")
     @UseGuards(GoogleGuard)
     googleCallback(@Req() req: Request, @Res({ passthrough: true }) res:Response) {
         return this.authService.oauthLogin(req, res)
     }
 
+    // Same OAuth pattern as Google, using GitHub's strategy/guard instead.
     @Get("oauth/github")
     @UseGuards(GithubGuard)
     githubLogin() {}
@@ -64,6 +72,10 @@ export class AuthController {
         return this.authService.oauthLogin(req, res);
     }
 
+    // Revokes the current session's refresh token and clears the cookie.
+    // Account identity comes from X-User-Id header, set by the API
+    // Gateway after verifying the access token — this service does not
+    // re-verify the JWT itself.
     @Post("logout")
     logout(
         @Req() req: Request,
@@ -72,6 +84,8 @@ export class AuthController {
         return this.authService.logout(req, res);
     }
 
+    // Lists all active (non-revoked) sessions for the current account —
+    // used for a "devices logged in" style UI.
     @Get("sessions")
     getSessions(
         @Req() req: Request,
@@ -79,6 +93,9 @@ export class AuthController {
         return this.authService.getSessions(req);
     }
 
+    // Revokes a single session by ID (e.g. "log out this device"),
+    // scoped to the current account so a user can't revoke someone
+    // else's session by guessing an ID.
     @Delete("sessions/:id")
     logoutSession(
         @Param("id") id: string,
@@ -90,6 +107,8 @@ export class AuthController {
         );
     }
 
+    // Revokes every session for the current account (e.g. "log out
+    // everywhere", or after a password change / suspected compromise).
     @Post("logout-all")
     logoutAll(
         @Req() req: Request,
