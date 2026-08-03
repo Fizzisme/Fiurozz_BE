@@ -16,6 +16,11 @@ export class ResponseInterceptor implements NestInterceptor {
         next: CallHandler,
     ): Observable<any> {
 
+        if (context.getType() !== "http") {
+            return next.handle();
+        }
+
+
         return next.handle().pipe(
             map((response: ApiResponse) => ({
                 success: true,
