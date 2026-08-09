@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import {OutboxEventService} from "./outbox-event.service.js";
 
+const MAX_ATTEMPTS = 3
 
 // Implements the relay (publish) side of the Outbox pattern: polls
 // the outbox table on a fixed interval and publishes any pending
@@ -11,6 +12,8 @@ import {OutboxEventService} from "./outbox-event.service.js";
 @Injectable()
 export class OutboxRelayService {
     private readonly logger = new Logger(OutboxRelayService.name);
+
+    private isRunning = false;
 
     constructor(
         private readonly prisma: PrismaService,
@@ -20,37 +23,57 @@ export class OutboxRelayService {
 
     @Interval(2000)
     async relay() {
-        const events = await this.outboxEvent.findAll();
 
-        for (const event of events) {
-            try {
-                await this.amqpConnection.publish(
-                    'user.events',
-                    event.eventType,
-                    event.payload,
-                    { persistent: true }, // survive a broker restart, not just held in memory
-                );
+        if (this.isRunning) return;
+        this.isRunning = true;
 
-                // Mark as processed only AFTER a successful publish, so a
-                // crash between publish and this update just results in
-                // the event being republished next tick (duplicate, not lost) —
-                // consumers are expected to be idempotent (see ConsumerService).
-                await this.prisma.outboxEvent.update({
-                    where: { id: event.id },
-                    data: { processedAt: new Date() },
-                });
+        try {
+            const events = await this.outboxEvent.findPublishable();
 
-                this.logger.log(`Published event ${event.id} (${event.eventType})`);
-            } catch (err) {
-                // Publish failed (broker down, network blip...) — leave
-                // processedAt null so it's picked up again next tick,
-                // just track the attempt count for visibility/alerting.
-                await this.prisma.outboxEvent.update({
-                    where: { id: event.id },
-                    data: { attempts: { increment: 1 } },
-                });
-                this.logger.error(`Failed to publish event ${event.id}: ${err.message}`);
+            for (const event of events) {
+
+                try {
+                    await this.amqpConnection.publish(
+                        'user.events',
+                        event.eventType,
+                        event.payload,
+                        { persistent: true },
+                    );
+
+                    await this.prisma.outboxEvent.update({
+                        where: { id: event.id },
+                        data: { processedAt: new Date(), status: 'success' },
+                    });
+
+                    this.logger.log(`Published event ${event.id} (${event.eventType})`);
+                } catch (err) {
+
+                    const newAttempts = event.attempts + 1;
+                    const exhausted = newAttempts >= MAX_ATTEMPTS;
+
+
+                    await this.prisma.outboxEvent.update({
+                        where: { id: event.id },
+                        data: { attempts: { increment: 1 }, status: exhausted ? 'failed' : 'pending', },
+                    });
+
+                    if (exhausted) {
+                        this.logger.error(
+                            `Event ${event.id} exceeded ${MAX_ATTEMPTS} attempts, marked as failed — needs manual review`,
+                        );
+                        // TODO later: persist to a dedicated view/table for
+                        // inspection, and send an alert (Slack/email), same
+                        // as the TODO in ConsumerService.handleFailedAccountCreated.
+                    } else {
+                        this.logger.error(`Failed to publish event ${event.id}: ${err.message}`);
+                    }
+                }
             }
+        } finally {
+            // Runs once, after the ENTIRE batch has been processed —
+            // this is what actually prevents overlapping ticks, not a
+            // per-event reset.
+            this.isRunning = false;
         }
     }
 }

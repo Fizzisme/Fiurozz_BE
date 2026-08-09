@@ -6,7 +6,7 @@ import {LoginDto}  from "./dto/login.dto.js";
 import type { Request, Response } from 'express';
 import {GoogleGuard} from "../oauth-account/guards/google.guard.js";
 import {GithubGuard} from "../oauth-account/guards/github.guard.js";
-
+import {FacebookGuard} from "../oauth-account/guards/facebook.guard.js";
 
 /**
  * Handles authentication endpoints: registration, login, and
@@ -58,7 +58,7 @@ export class AuthController {
         return this.authService.oauthLogin(req, res)
     }
 
-    // Same OAuth pattern as Google, using GitHub's strategy/guard instead.
+    // Same OAuth pattern as Google, using GitHub's strategies/guard instead.
     @Get("oauth/github")
     @UseGuards(GithubGuard)
     githubLogin() {}
@@ -70,6 +70,38 @@ export class AuthController {
         @Res({ passthrough: true }) res: Response,
     ) {
         return this.authService.oauthLogin(req, res);
+    }
+
+    @Get("oauth/facebook")
+    @UseGuards(FacebookGuard)
+    facebookLogin() {}
+
+    @Get("oauth/facebook/callback")
+    @UseGuards(FacebookGuard)
+    facebookCallback(
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response,
+    ) {
+        return this.authService.oauthLogin(req, res);
+    }
+
+    // Server-to-server endpoint called ONLY by the Next.js BFF (never
+    // directly by a browser) to trade a short-lived OAuth handoff code
+    // for a real access/refresh token pair.
+    //
+    // Splitting this from the OAuth callback (oauthLogin) is intentional:
+    // oauthLogin only verifies the OAuth profile and issues a handoff
+    // code -- it does NOT create a refresh-token session. The session is
+    // only created here, at exchange time, so a popup closed mid-flow or
+    // a failed exchange call never leaves an orphaned session in the DB.
+    //
+    // req/res are passed through to authService.oauthExchange() because
+    // issueToken() (called downstream) needs req's device/IP info to
+    // persist the session, and res to set the refreshToken cookie -- same
+    // contract as the password-login flow.
+    @Post("oauth/exchange")
+    oauthExchange(@Body() dto: {code: string}, @Res({ passthrough: true }) res:Response){
+        return this.authService.oauthExchange(dto.code, res)
     }
 
     // Revokes the current session's refresh token and clears the cookie.

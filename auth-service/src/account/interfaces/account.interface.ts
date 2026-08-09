@@ -2,7 +2,7 @@ export interface IAccount{
     id: string,
     fullName: string,
     displayName: string,
-    email: string,
+    email: string | null,
     passwordHash: string | null,
     emailVerified?: boolean,
     status: string,

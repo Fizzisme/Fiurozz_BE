@@ -1,5 +1,5 @@
 export interface IOAuthUser {
-    provider: "google" | "github";
+    provider: "google" | "github" | "facebook";
     providerAccountId: string;
     fullName: string;
     email: string;

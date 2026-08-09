@@ -6,7 +6,7 @@ import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentation
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 
 
-diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR);
+// diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR);
 
 const sdk = new NodeSDK({
 
