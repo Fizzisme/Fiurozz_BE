@@ -1,12 +1,16 @@
 import { RabbitSubscribe, AmqpConnection, Nack } from '@golevelup/nestjs-rabbitmq';
 import { PrismaService } from "../prisma/prisma.service.js";
 import { Injectable, Logger } from "@nestjs/common";
+import {Gender} from "../generated/prisma/enums.js";
 
 interface AccountCreatedPayload {
     id: string;
     email: string;
     fullName: string;
     displayName: string;
+    gender: Gender;
+    birthday: Date;
+    country: string;
 }
 
 const MAX_RETRIES = 3;
@@ -61,6 +65,9 @@ export class ConsumerService {
                             username: payload.email.split('@')[0],
                             displayName: payload.displayName,
                             fullName: payload.fullName,
+                            location: payload.country,
+                            gender: payload.gender,
+                            birthday: payload.birthday
                         },
                     },
                     settings: { create: {} },
