@@ -35,13 +35,18 @@ export class OutboxEventService{
         })
     }
 
-    // Fetches the next batch of unpublished events, oldest first, for
-    // OutboxRelayService to pick up and publish. Batched (50 at a time)
-    // to avoid loading an unbounded backlog into memory if the relay
-    // has fallen behind.
-    async findAll() {
+    // Fetches the next batch of publishable events: still pending AND
+    // under the retry limit, oldest first. Filtering "status" and
+    // "attempts" here (not in the caller) keeps events that already
+    // exhausted retries from clogging every batch — otherwise they'd
+    // keep getting fetched (processedAt is still null) and crowd out
+    // genuinely new events behind them in the queue.
+    async findPublishable() {
         return this.prisma.outboxEvent.findMany({
-            where: { processedAt: null },
+            where: {
+                status: 'pending',
+                processedAt: null,
+            },
             orderBy: { createdAt: 'asc' },
             take: 50,
         })

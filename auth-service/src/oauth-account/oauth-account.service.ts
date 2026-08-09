@@ -34,14 +34,15 @@ export class OauthAccountService {
 
         if(oauthAccount) return oauthAccount.account;
 
-        // Not linked yet — check if an account with this email already
-        // exists (e.g. previously registered with a password, or linked
-        // via a different OAuth provider using the same email).
-        let account: IAccount | null = await this.prisma.account.findUnique({
-            where: {
-                email: profile.email,
-            }
-        })
+        // Only look up an existing account by email when this profile
+        // actually has one. Passing `email: null` to findUnique would
+        // match ANY account with a null email (Postgres/Prisma treat
+        // NULL as "unknown", not as a comparable value equal to other
+        // NULLs in application logic) — silently linking two unrelated
+        // no-email OAuth users to the same account. Skipping the lookup
+        // entirely when there's no email to match against avoids that.
+        let account: IAccount | null = profile.email ? await this.accountService.findAccountByEmail(profile.email)
+            : null
         if (!account) {
 
             const accountId = uuidv7()
@@ -54,18 +55,18 @@ export class OauthAccountService {
             const [createdAccount] = await this.prisma.$transaction([
                  this.accountService.createAccount({
                     id: accountId,
-                    email: profile.email,
+                    email: profile.email ?? null,
                     fullName: profile.fullName,
                     displayName: profile.fullName,
                     passwordHash: null,
-                    emailVerified: true
+                    emailVerified: !!profile.email,
                 }),
                 this.outboxEventService.create(
                     accountId,
                     "account.created",
                     {
                         id: accountId,
-                        email: profile.email,
+                        email: profile.email  ?? null,
                         fullName: profile.fullName,
                         displayName: profile.fullName
                     }
@@ -84,7 +85,7 @@ export class OauthAccountService {
                 id: oauthId,
                 provider: profile.provider,
                 providerAccountId: profile.providerAccountId,
-                providerEmail: profile.email,
+                providerEmail: profile.email ?? null,
                 accountId: account.id,
             },
         });

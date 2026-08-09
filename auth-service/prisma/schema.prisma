@@ -16,7 +16,7 @@ model Account {
   id String @id @db.Uuid
   fullName String @map("full_name")
   displayName String @unique @map("display_name")
-  email String @unique
+  email String? @unique
   passwordHash String? @map("password_hash")
   emailVerified Boolean @default(false) @map("email_verified")
   status String @default("ACTIVE")
@@ -36,7 +36,7 @@ model OauthAccount {
   accountId String @map("account_id") @db.Uuid
   provider String
   providerAccountId String @map("provider_account_id")
-  providerEmail String @map("provider_email")
+  providerEmail String? @map("provider_email")
   createdAt DateTime @default(now()) @map("created_at")
 
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -72,7 +72,8 @@ model OutboxEvent {
   createdAt   DateTime  @default(now()) @map("created_at")
   processedAt DateTime? @map("processed_at")
   attempts    Int       @default(0)
+  status      String    @default("pending")
 
-  @@index([processedAt])
+  @@index([status, processedAt, createdAt])
   @@map("outbox_events")
 }

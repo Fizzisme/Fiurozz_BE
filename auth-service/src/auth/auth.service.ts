@@ -13,6 +13,7 @@ import {AccountService} from "../account/account.service.js";
 import {OauthAccountService} from "../oauth-account/oauth-account.service.js";
 import {IOAuthUser} from "../oauth-account/interfaces/oauth-user.interface.js";
 import {OutboxEventService} from "../outboxEvent/outbox-event.service.js";
+import {DeviceInfo} from "./interfaces/device-info.interface.js";
 
 @Injectable()
 export class AuthService {
@@ -53,7 +54,10 @@ export class AuthService {
                     id: accountId,
                     email: data.email,
                     fullName: data.fullName,
-                    displayName: data.displayName
+                    displayName: data.displayName,
+                    country: data.country,
+                    birthday: data.birthday,
+                    gender: data.gender,
                 }
             ),
         ]);
@@ -150,19 +154,51 @@ export class AuthService {
         const profile = req.user as IOAuthUser;
 
         if (profile.provider === "github" && !profile.email) {
-            throw new UnauthorizedException(
-                "A verified email is required to sign in with GitHub.",
+            // throw new UnauthorizedException(
+            //     "A verified email is required to sign in with GitHub.",
+            // );
+
+
+            // Instead of throwing (which renders raw JSON in the popup and
+            // leaves the main tab waiting forever with no postMessage),
+            // redirect into the same popup-callback page with a failure
+            // signal so the popup can close itself cleanly either way.
+            return res.redirect(
+                `${process.env.FE_URL}/api/auth/oauth/popup-callback?error=github_email_required`
             );
         }
 
         const account: IAccount = await this.oauthService.loginWithOauth(profile)
 
-        return this.tokenService.issueToken(account,{
-            deviceName: req.get("x-device-name"),
-            userAgent: req.get("user-agent"),
+        const deviceInfo: DeviceInfo = {
+            deviceName: req.headers['x-device-name'] as string | undefined,
+            userAgent: req.headers['user-agent'],
             ipAddress: req.ip,
-        },
-        res)
+        }
+
+        const handoffCode = await this.tokenService.createOAuthHandoffCode(
+            account.id,
+            deviceInfo
+        );
+
+        return res.redirect(`${process.env.FE_URL}/api/auth/oauth/popup-callback?code=${handoffCode}`);
+    }
+
+    async oauthExchange(code: string, res: Response) {
+        const {accountId, deviceInfo} = await this.tokenService.verifyOAuthHandoffCode(code);
+
+        const account = await this.accountService.findAccountById(accountId);
+
+        if (!account) {
+            throw new UnauthorizedException("Invalid account.");
+        }
+
+        return this.tokenService.issueToken(account,{
+                deviceName: deviceInfo?.deviceName,
+                userAgent: deviceInfo?.userAgent,
+                ipAddress: deviceInfo?.ipAddress,
+            },
+            res)
     }
 
     async logout(
