@@ -11,6 +11,7 @@ interface AccountCreatedPayload {
     gender: Gender;
     birthday: Date;
     country: string;
+    avatarUrl: string;
 }
 
 const MAX_RETRIES = 3;
@@ -62,12 +63,13 @@ export class ConsumerService {
                     id: payload.id,
                     profile: {
                         create: {
-                            username: payload.email.split('@')[0],
+                            email: payload.email,
                             displayName: payload.displayName,
                             fullName: payload.fullName,
                             location: payload.country,
                             gender: payload.gender,
-                            birthday: payload.birthday
+                            birthday: payload.birthday,
+                            avatarUrl: payload.avatarUrl,
                         },
                     },
                     settings: { create: {} },
