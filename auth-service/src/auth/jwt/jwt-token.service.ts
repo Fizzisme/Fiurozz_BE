@@ -11,7 +11,7 @@ export class JwtTokenService {
     // into whole seconds. Needed because expiresIn is only consumed by
     // the JWT library itself -- callers that need to set a cookie's
     // maxAge (which the FE does) need the plain number instead.
-    private parseExpiresInSeconds(value: string): number {
+     parseExpiresInSeconds(value: string): number {
         const match = /^(\d+)([smhd])$/.exec(value);
         if (!match) {
             throw new Error(`Invalid duration format: "${value}". Expected e.g. "15m", "1h", "7d".`);

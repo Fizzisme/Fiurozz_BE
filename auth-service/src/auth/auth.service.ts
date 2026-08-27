@@ -93,6 +93,7 @@ export class AuthService {
 
     async refresh(req: Request, res: Response) {
         const refreshToken = req.cookies.refreshToken;
+
         if (!refreshToken) {
             throw new UnauthorizedException();
         }
@@ -100,6 +101,7 @@ export class AuthService {
         const payload = await this.jwtTokenService.verifyRefreshToken(refreshToken);
 
         const token = await this.refreshTokenService.findByJti(payload.jti);
+
         if (!token || token.revoked || token.expiresAt < new Date()) {
             throw new UnauthorizedException();
         }
@@ -144,6 +146,8 @@ export class AuthService {
 
         return {
             data: {
+                accessTokenExpiresIn: this.jwtTokenService.parseExpiresInSeconds(process.env.JWT_ACCESS_EXPIRES as `${number}${"s"|"m"|"h"|"d"}`),
+                refreshTokenExpiresIn: this.jwtTokenService.parseExpiresInSeconds(process.env.JWT_REFRESH_EXPIRES as `${number}${"s"|"m"|"h"|"d"}`),
                 accessToken: tokens.accessToken
             }
         };

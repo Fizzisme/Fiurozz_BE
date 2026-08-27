@@ -3,5 +3,5 @@ export interface IOAuthUser {
     providerAccountId: string;
     fullName: string;
     email: string;
-    avatar?: string;
+    avatarUrl?: string;
 }

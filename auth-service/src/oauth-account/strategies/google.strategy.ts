@@ -30,7 +30,7 @@ export class GoogleStrategy extends PassportStrategy (
             providerAccountId: profile.id,
             email: profile.emails![0].value,
             fullName: profile.displayName,
-            avatar: profile.photos?.[0]?.value,
+            avatarUrl: profile.photos?.[0]?.value,
         }
 
 

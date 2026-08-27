@@ -68,7 +68,8 @@ export class OauthAccountService {
                         id: accountId,
                         email: profile.email  ?? null,
                         fullName: profile.fullName,
-                        displayName: profile.fullName
+                        displayName: profile.fullName,
+                        avatarUrl: profile.avatarUrl,
                     }
                 ),
             ]);
