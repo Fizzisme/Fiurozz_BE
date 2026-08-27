@@ -30,8 +30,6 @@ export class FacebookStrategy extends PassportStrategy(
     ) {
         const { id, displayName, name, emails, photos } = profile;
 
-        console.log("profile ", profile)
-
         return {
             provider: "facebook",
 

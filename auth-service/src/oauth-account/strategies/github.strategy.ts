@@ -50,7 +50,7 @@ export class GithubStrategy extends PassportStrategy(
             email,
             fullName: profile.displayName || profile.username,
             displayName: profile.username,
-            avatar: profile.photos?.[0]?.value,
+            avatarUrl: profile.photos?.[0]?.value,
         };
     }
 }
